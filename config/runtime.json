@@ -1,0 +1,10 @@
+{
+  "development": {
+    "db": {
+      "name": "feedoo",
+      "host": "localhost",
+      "password": "new_password_here",
+      "user": "root"
+    }
+  }
+}

@@ -1,6 +1,8 @@
 var FeedParser = require('feedparser');
 var Item       = require('./item').Item;
+
 function Feed(obj) {
+  this.dbObject = obj;
   this.parser = new FeedParser();
   var _this   = this;
   this.parser.on('article', function(article){
@@ -9,8 +11,7 @@ function Feed(obj) {
   this.parser.on('end', function(){
     _this.onEnd();
   });
-  var feedURL = 'http://natemat.pl/rss/wszystkie';
-  this.parser.parseFile(feedURL);
+  this.parser.parseFile(obj.url);
 }
 
 Feed.prototype.onArticle = function(article) {
