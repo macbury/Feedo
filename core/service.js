@@ -33,9 +33,9 @@ function getFeedsToSync() {
 
 exports.sync = function(dbHelperTemp) {
   console.log('Staring sync, This process is pid ' + process.pid);
+  redisClient.del(RedisConstants.FeedLock);
   dbHelper = dbHelperTemp;
   setInterval(function(){
     getFeedsToSync();
   }, 10 * 1000 + (Math.random() * 5));
-  getFeedsToSync();
 }

@@ -23,7 +23,9 @@ DatabaseHelper.prototype.buildFeed = function() {
   this.Feed = this.db.define('Feed', {
     url: { type: Sequelize.STRING, allowNull: false, unique: true  },
     title: { type: Sequelize.STRING, allowNull: false },
-    nextPull: { type: Sequelize.DATE, defaultValue: Sequelize.NOW }
+    nextPull: { type: Sequelize.DATE, defaultValue: Sequelize.NOW },
+    errorCount: { type: Sequelize.INTEGER, defaultValue: 0 },
+    errorMessage: { type: Sequelize.TEXT },
   },{});
   this.Feed.sync();
 }
