@@ -14,7 +14,7 @@ function Feed(obj, redisClient) {
   console.log("New feed parser for: "+this.dbObject.id)
   this.broken = false;
   this.redisClient = redisClient;
-  
+  this.fetchCount  = 0;
   this.parser = new FeedMe();
   var _this   = this;
 
@@ -28,12 +28,11 @@ function Feed(obj, redisClient) {
   });
 
   this.parser.on("item", function(item) {
-    console.log("Item new");
-    //_this.onArticle(item);
+    _this.onArticle(item);
   });
 
   this.parser.on("end", function() {
-    _this.onEnd();
+    _this.checkIfFinished();
   });
 
   try {
@@ -47,68 +46,27 @@ function Feed(obj, redisClient) {
     this.broken = true;
     this.onEnd();
   }
-  
-/*
-  try {
-    /*this.parser.parseUrl(obj.url, { normalize: true, strict: true }, function (error, meta, articles) {
-      console.log("Recived callback for parse url");
-      if (error != null) {
-
-      } else {
-        _this.dbObject.title = meta.title;
-      }
-      
-      _this.onEnd();
-    });
-
-    request(obj.url, function (error, response, body){
-      if (error == null || (body == null || body.length < 10)) {
-        try {
-          _this.parser.parseString(body, {}, function(parseError, meta, articles){
-            if (parseError == null) {
-              _this.dbObject.title = meta.title;
-              for (var i = 0; i < articles.length; i++) {
-                //_this.onArticle(articles[i]);
-              }
-            } else {
-              _this.dbObject.errorMessage = "Parse error";
-              _this.broken = true;
-            }
-          });
-        } catch (parseError) {
-          _this.dbObject.errorMessage = "Parse error";
-          _this.broken = true;
-        }
-        _this.onEnd();
-      } else {
-        _this.dbObject.errorMessage = JSON.stringify(error);
-        _this.broken = true;
-        _this.onEnd();
-      }
-    });
-  } catch (error) {
-    _this.dbObject.errorMessage = JSON.stringify(error);
-    _this.broken = true;
-    _this.onEnd();
-  }
-
-  this.timeoutTimer = setTimeout(function() {
-    console.log("Timeout!");
-    _this.dbObject.errorMessage = "Timeout";
-    _this.broken = true; 
-    try {
-      _this.parser.stream.end();  
-    } catch(exception) {
-
-    }
-    
-    _this.onEnd();
-  }, 15000);*/
 }
 
 Feed.prototype.onArticle = function(article) {
-  console.log("Article fetch");
-  var item = new Item(article.link); 
+  console.log("New article");
+  var _this = this;
+  this.fetchCount++;
+  var item = new Item(article); 
+  item.onFinish = function () {
+    _this.fetchCount--;
+    _this.checkIfFinished();
+  }
+
+  item.download();
+  
+}
+
+Feed.prototype.checkIfFinished = function() {
+  console.log("Downloads left for feed: "+ this.dbObject.id + " is: "+this.fetchCount);
+  if (this.fetchCount <= 0) {
+    this.onEnd();
+  };
 }
 
 Feed.prototype.onEnd = function() {
