@@ -33,7 +33,7 @@ DatabaseHelper.prototype.buildFeed = function() {
 
 DatabaseHelper.prototype.buildItem = function() {
   this.Item = this.db.define('Item', {
-    url: { type: Sequelize.STRING, allowNull: false, unique: true  },
+    url: { type: Sequelize.STRING, allowNull: false  },
     title: { type: Sequelize.STRING, allowNull: false },
     pubDate: { type: Sequelize.DATE, defaultValue: Sequelize.NOW },
     body: { type: Sequelize.TEXT },
