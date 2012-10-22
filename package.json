@@ -10,9 +10,12 @@
     "jade": "*",
     "request": "*",
     "feedparser": "*",
-    "readability": "*",
+    "readability": "git://github.com/arrix/node-readability.git",
     "nlogger": "0.3.1",
     "config": "0.4.17",
-    "sequelize": "1.4.1"
+    "sequelize": "*",
+    "hiredis": "*",
+    "redis": "*",
+    "date-utils": "*"
   }
 }

@@ -1,7 +1,13 @@
 var FeedParser = require('feedparser');
 var Item       = require('./item').Item;
+require('date-utils');
 
-function Feed(obj) {
+var RedisConstants = require("./constants").RedisConstants;
+
+var RefreshTime = 5;
+
+function Feed(obj, redisClient) {
+  this.redisClient = redisClient;
   this.dbObject = obj;
   this.parser = new FeedParser();
   var _this   = this;
@@ -20,7 +26,11 @@ Feed.prototype.onArticle = function(article) {
 }
 
 Feed.prototype.onEnd = function() {
-  console.log("Finished");
+  this.dbObject.nextPull = new Date();
+  this.dbObject.nextPull.addMinutes(RefreshTime)
+  this.dbObject.save();
+  console.log("Finished, removing lock from feed, next check will be on: "+ JSON.stringify(this.dbObject.nextPull));
+  this.redisClient.lrem(RedisConstants.FeedLock, 0, this.dbObject.id);
 }
 
 exports.Feed = Feed;

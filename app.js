@@ -5,6 +5,9 @@ var app             = require("./core/http_api").app;
 var service         = require("./core/service");
 var CONFIG          = require('config').development;
 var DatabaseHelper  = require("./core/db").DatabaseHelper;
+
+numCPUs = 1;
+
 if (cluster.isMaster) {
   for (var i = 0; i < numCPUs; i++) {
     cluster.fork();
