@@ -22,7 +22,7 @@ function getFeedsToSync() {
         for (var i = 0; i < feeds.length; i++) {
           var feedModel = feeds[i];
           redisClient.lpush(RedisConstants.FeedLock, feedModel.id.toString());
-          new Feed(feedModel, redisClient); 
+          new Feed(feedModel, redisClient, dbHelper); 
         };
       });
     }

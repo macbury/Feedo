@@ -17,6 +17,7 @@ function DatabaseHelper(config) {
   console.log("Appending schema");
 
   this.buildFeed();
+  this.buildItem();
 }
 
 DatabaseHelper.prototype.buildFeed = function() {
@@ -28,6 +29,18 @@ DatabaseHelper.prototype.buildFeed = function() {
     errorMessage: { type: Sequelize.TEXT },
   },{});
   this.Feed.sync();
+}
+
+DatabaseHelper.prototype.buildItem = function() {
+  this.Item = this.db.define('Item', {
+    url: { type: Sequelize.STRING, allowNull: false, unique: true  },
+    title: { type: Sequelize.STRING, allowNull: false },
+    pubDate: { type: Sequelize.DATE, defaultValue: Sequelize.NOW },
+    body: { type: Sequelize.TEXT },
+  },{});
+  this.Feed.hasMany(this.Item);
+  this.Item.belongsTo(this.Feed);
+  this.Item.sync();
 }
 
 

@@ -1,13 +1,9 @@
 var readability = require('readability');
 var request = require('request');
 
-function Item(article) {
+function Item(url) {
   //console.log(article);
-  if (typeof(article.link) == 'string') {
-    this.url = article.link;  
-  } else {
-    this.url = article.link.href;
-  }
+  this.url = url;
   
   this.body = null;
 }

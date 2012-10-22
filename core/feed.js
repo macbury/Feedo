@@ -9,13 +9,14 @@ var RedisConstants = require("./constants").RedisConstants;
 
 var RefreshTime = 5;
 
-function Feed(obj, redisClient) {
+function Feed(obj, redisClient, dbHelper) {
   this.dbObject = obj;
   console.log("New feed parser for: "+this.dbObject.id)
   this.broken = false;
   this.redisClient = redisClient;
   this.fetchCount  = 0;
   this.parser = new FeedMe();
+  this.dbHelper = dbHelper;
   var _this   = this;
 
   this.parser.on('title', function(title) {
@@ -49,17 +50,46 @@ function Feed(obj, redisClient) {
 }
 
 Feed.prototype.onArticle = function(article) {
-  console.log("New article");
   var _this = this;
-  this.fetchCount++;
-  var item = new Item(article); 
-  item.onFinish = function () {
-    _this.fetchCount--;
-    _this.checkIfFinished();
+
+  var url = '';
+
+  if (typeof(article.link) == 'string') {
+    url = article.link;  
+  } else {
+    url = article.link.href;
   }
 
-  item.download();
-  
+  var item = new Item(url); 
+  item.onFinish = function () {
+    var itemDBObj = _this.dbHelper.Item.build({
+      url:     url,
+      title:   article.title,
+      pubDate: article.pubDate,
+      body:    item.body
+    });
+
+    _this.dbObject.addItem(itemDBObj).success(function(){
+      _this.fetchCount--;
+      _this.checkIfFinished();
+    }).error(function(error) {
+      console.error(error);
+    });
+  }
+
+  this.dbObject.getItems({ where: { url: url } }).success(function(items){
+    if (items == null || items.length == 0) {
+      console.log("New article to download :"+ url);
+      _this.fetchCount++;
+      item.download();  
+    } else {
+      console.log("Skipping article to download :"+ url);
+    }
+  }).error(function(error){
+    console.error(error);
+    _this.checkIfFinished();
+  })
+
 }
 
 Feed.prototype.checkIfFinished = function() {
