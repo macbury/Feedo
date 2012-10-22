@@ -9,7 +9,7 @@
     "express": "3.0.0rc5",
     "jade": "*",
     "request": "*",
-    "feedparser": "git://github.com/danmactough/node-feedparser.git",
+    "feedme": "git://github.com/fent/feedme.js.git",
     "readability": "git://github.com/arrix/node-readability.git",
     "nlogger": "0.3.1",
     "config": "0.4.17",
