@@ -18,7 +18,7 @@ function getFeedsToSync() {
       dbHelper.Feed.findAll({ where: [" Feeds.id NOT IN (?) AND (Feeds.nextPull IS NULL OR Feeds.nextPull < NOW()) ", a], limit: 10, order: "nextPull ASC" }).success(function(feeds) {
         for (var i = 0; i < feeds.length; i++) {
           var feedModel = feeds[i];
-          redisClient.lpush(RedisConstants.FeedLock, feedModel.id, function(error, resp) {
+          redisClient.lpush(RedisConstants.FeedLock, parseInt(feedModel.id), function(error, resp) {
             if (error == null) {
               var feedParser = new Feed(feedModel, redisClient);  
             } else {
