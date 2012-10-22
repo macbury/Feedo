@@ -27,6 +27,7 @@ function Feed(obj, redisClient, dbHelper) {
 
   this.parser.on("type", function(type) {
     console.log("Feed type: "+ type);
+    _this.feedType = type;
   });
 
   this.parser.on("item", function(item) {
