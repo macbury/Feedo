@@ -20,7 +20,7 @@ function Feed(obj, redisClient) {
 
   this.parser.parseFile(obj.url, {}, function (error, meta, articles) {
     if (error) {
-      _this.dbObject.errorMessage = error;
+      _this.dbObject.errorMessage = JSON.stringify(error);
       _this.broken = true;  
     } else {
       _this.dbObject.title = meta.title;
@@ -28,6 +28,14 @@ function Feed(obj, redisClient) {
     
     _this.onEnd();
   });
+
+  this.timeoutTimer = setTimeout(function() {
+    console.log("Timeout!");
+    _this.dbObject.errorMessage = "Timeout";
+    _this.broken = true; 
+    _this.parser.stream.end();
+    _this.onEnd();
+  }, 15000);
 }
 
 Feed.prototype.onArticle = function(article) {
@@ -36,9 +44,12 @@ Feed.prototype.onArticle = function(article) {
 }
 
 Feed.prototype.onEnd = function() {
+  console.log("Ending syncing feed");
+  clearTimeout(this.timeoutTimer);
   if (this.broken) {
     this.dbObject.errorCount += 1;
   } else {
+    this.dbObject.errorMessage = null;
     this.dbObject.errorCount = 0;
   }
   this.dbObject.nextPull = new Date();
