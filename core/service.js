@@ -62,5 +62,5 @@ exports.sync = function(dbHelperTemp, config) {
   dbHelper = dbHelperTemp;
   setInterval(function(){
     getFeedsToSync();
-  }, 2 * 1000);
+  }, Constants.AskForNewFeeds * 1000);
 }

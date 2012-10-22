@@ -4,5 +4,5 @@ var RedisConstants = {
 }
 
 exports.MaxFetch       = 10;
-
+exports.AskForNewFeeds = 2;
 exports.RedisConstants = RedisConstants;
