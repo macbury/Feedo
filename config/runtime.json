@@ -5,6 +5,9 @@
       "host": "localhost",
       "password": "new_password_here",
       "user": "root"
+    },
+    "gcm": {
+      "key": "1234"
     }
   }
 }

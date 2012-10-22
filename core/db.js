@@ -27,6 +27,7 @@ DatabaseHelper.prototype.buildFeed = function() {
     nextPull: { type: Sequelize.DATE, defaultValue: Sequelize.NOW },
     errorCount: { type: Sequelize.INTEGER, defaultValue: 0 },
     errorMessage: { type: Sequelize.TEXT },
+    lastRefresh: { type: Sequelize.DATE, defaultValue: Sequelize.NOW }
   },{});
   this.Feed.sync();
 }

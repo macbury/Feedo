@@ -17,6 +17,7 @@ function Feed(obj, redisClient, dbHelper) {
   this.fetchCount  = 0;
   this.parser = new FeedMe();
   this.dbHelper = dbHelper;
+  this.newItems = false;
   var _this   = this;
 
   this.parser.on('title', function(title) {
@@ -36,8 +37,13 @@ function Feed(obj, redisClient, dbHelper) {
     _this.checkIfFinished();
   });
 
+}
+
+Feed.prototype.start = function(endCallback) {
+  this.endCallback = endCallback;
+  var _this   = this;
   try {
-    request(obj.url, { followAllRedirects: true, timeout: 10000 }).on("error", function(error){
+    request(this.dbObject.url, { followAllRedirects: true, timeout: 10000 }).on("error", function(error){
       _this.dbObject.errorMessage = JSON.stringify(error);
       _this.broken = true;
       _this.onEnd();
@@ -81,6 +87,7 @@ Feed.prototype.onArticle = function(article) {
     if (items == null || items.length == 0) {
       console.log("New article to download :"+ url);
       _this.fetchCount++;
+      _this.newItems = true;
       item.download();  
     } else {
       console.log("Skipping article to download :"+ url);
@@ -101,13 +108,18 @@ Feed.prototype.checkIfFinished = function() {
 
 Feed.prototype.onEnd = function() {
   console.log("Ending syncing feed");
-  clearTimeout(this.timeoutTimer);
+  this.endCallback(this);
   if (this.broken) {
     this.dbObject.errorCount += 1;
   } else {
     this.dbObject.errorMessage = null;
     this.dbObject.errorCount = 0;
   }
+
+  if (this.newItems) {
+    this.dbObject.lastRefresh = new Date();
+  }
+
   this.dbObject.nextPull = new Date();
   this.dbObject.nextPull.addMinutes(RefreshTime * (this.dbObject.errorCount + 1));
   this.dbObject.save();
