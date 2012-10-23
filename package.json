@@ -17,6 +17,7 @@
     "hiredis": "0.1.14",
     "sequelize":"*",
     "date-utils": "*",
-    "feedparser": "git://github.com/danmactough/node-feedparser.git"
+    "feedparser": "git://github.com/danmactough/node-feedparser.git", 
+    "xmlbuilder": "*"
   }
 }
