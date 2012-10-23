@@ -3,16 +3,26 @@ var streamify = require('dt-stream');
 
 exports.index = function(req, res){
   res.contentType("text/xml");
-  var xml = new asyncxml.Builder({pretty:true})
+  var xml = new asyncxml.Builder({pretty:false})
   streamify(xml).stream.pipe(res);
+  var date = new Date();
+
+  var db = req.get('dbHelper');
+
+  db.Feed.findAll().success(function(feeds) {
+    console.log(feeds);
+  });
 
   xml.tag("xml", {version:"1.0"})
-        .tag("list")
-            .tag("entry", function () {
-                this.attr('id', 1)
-            }).up()
-            .tag("entry", {id:2}, "foo").up()
-        .up()
+    .tag("channels")
+      .tag("channel")
+        .tag("title", "My blog posts").up()
+        .tag("link", "http://blog.local").up()
+        .tag("lastRefresh", date.toString()).up()
+      .up()
     .up()
-.end();
+  .up();
+
+
+  xml.end();
 };
