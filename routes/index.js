@@ -1,12 +1,10 @@
-var asyncxml = require('asyncxml')
+var asyncxml  = require('asyncxml');
+var streamify = require('dt-stream');
 
 exports.index = function(req, res){
+  res.contentType("text/xml");
   var xml = new asyncxml.Builder({pretty:true})
-
-  xml.on('raw', function (chunk) {
-    console.log("Data");
-    console.log(chunk);
-  })
+  streamify(xml).stream.pipe(res);
 
   xml.tag("xml", {version:"1.0"})
         .tag("list")
@@ -17,8 +15,4 @@ exports.index = function(req, res){
         .up()
     .up()
 .end();
-    
-  
-  //res.contentType("text/xml");
-  res.send('ok');  
 };
