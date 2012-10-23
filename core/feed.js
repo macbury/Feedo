@@ -1,6 +1,7 @@
 var request    = require('request');
 var FeedParser = require('feedparser');
 var Item       = require('./item').Item;
+var logger     = require('./logger').logger(module);
 require('date-utils');
 
 var RedisConstants = require("./constants").RedisConstants;
@@ -9,7 +10,7 @@ var RefreshTime = 5;
 
 function Feed(obj, dbHelper) {
   this.dbObject = obj;
-  console.log("New feed parser for: "+this.dbObject.id)
+  logger.info("New feed parser for: "+this.dbObject.id)
   this.broken = false;
   this.fetchCount  = 0;
   this.parser = new FeedParser();
@@ -18,7 +19,7 @@ function Feed(obj, dbHelper) {
   var _this   = this;
 
   /*this.parser.on('title', function(title) {
-    console.log('title of feed is', title);
+    logger.info('title of feed is', title);
     _this.dbObject.title = title;
   });*/
 
@@ -56,7 +57,7 @@ Feed.prototype.onArticle = function(article) {
   var url = article.link;
 
   if (url == null) {
-    console.log("URL for this article is null!", article);
+    logger.info("URL for this article is null!", article);
     return;
   }
   this.dbObject.title = article.meta.title;
@@ -78,35 +79,35 @@ Feed.prototype.onArticle = function(article) {
       _this.fetchCount--;
       _this.checkIfFinished();
     }).error(function(error) {
-      console.error(error);
+      logger.error(error);
     });
   }
 
   this.dbObject.getItems({ where: { url: url } }).success(function(items){
     if (items == null || items.length == 0) {
-      console.log("New article to download :"+ url);
+      logger.info("New article to download :"+ url);
       _this.fetchCount++;
       _this.newItems = true;
       item.download();  
     } else {
-      console.log("Skipping article to download: "+ url);
+      logger.info("Skipping article to download: "+ url);
     }
   }).error(function(error){
-    console.error(error);
+    logger.error(error);
     _this.checkIfFinished();
   })
 
 }
 
 Feed.prototype.checkIfFinished = function() {
-  console.log("Downloads left for feed: "+ this.dbObject.id + " is: "+this.fetchCount);
+  logger.info("Downloads left for feed: "+ this.dbObject.id + " is: "+this.fetchCount);
   if (this.fetchCount <= 0) {
     this.onEnd();
   };
 }
 
 Feed.prototype.onEnd = function() {
-  console.log("Ending syncing feed");
+  logger.info("Ending syncing feed");
   this.endCallback(this);
   if (this.broken) {
     this.dbObject.errorCount += 1;
@@ -122,7 +123,7 @@ Feed.prototype.onEnd = function() {
   this.dbObject.nextPull = new Date();
   this.dbObject.nextPull.addMinutes(RefreshTime * (this.dbObject.errorCount + 1));
   this.dbObject.save();
-  console.log("Finished, removing lock from feed, next check will be on: "+ JSON.stringify(this.dbObject.nextPull) + " for feed" +this.dbObject.id);
+  logger.info("Finished, removing lock from feed, next check will be on: "+ JSON.stringify(this.dbObject.nextPull) + " for feed" +this.dbObject.id);
 }
 
 exports.Feed = Feed;

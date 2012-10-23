@@ -1,12 +1,12 @@
 var Sequelize = require("sequelize");
-
+var logger       = require('./logger').logger(module);
 function DatabaseHelper(config) {
-  console.log("Connecting to db: ",JSON.stringify(config));
+  logger.info("Connecting to db: ",JSON.stringify(config));
   this.db = new Sequelize(config.name, config.user, config.password, {
     host: config.host,
     port: 3306,
     protocol: null,
-    //logging: console,
+    logging: logger.info,
     maxConcurrentQueries: 100,
     dialect: 'mysql',
     define: { timestamps: true },
@@ -14,7 +14,7 @@ function DatabaseHelper(config) {
     pool: { maxConnections: 5, maxIdleTime: 30}
   });
 
-  console.log("Appending schema");
+  logger.info("Appending schema");
 
   this.buildFeed();
   this.buildItem();

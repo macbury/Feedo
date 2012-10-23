@@ -4,6 +4,7 @@ var DatabaseHelper  = require('./db').DatabaseHelper;
 var RedisQueue      = require('./redis_queue').RedisQueue;
 var Constants       = require("./constants");
 var RedisConstants  = require("./constants").RedisConstants;
+var logger          = require('./logger').logger(module);
 //numCPUs = 1;
 
 function WorkerManager(config) {
@@ -16,15 +17,15 @@ function WorkerManager(config) {
   });
 
   cluster.on('exit', function(worker, code, signal) {
-    console.log('worker ' + worker.process.pid + ' died');
+    logger.info('worker ' + worker.process.pid + ' died');
   });
 }
 
 WorkerManager.prototype.startWorkers = function(num) {
-  console.log("DB synced! Forking workers: ");
+  logger.info("DB synced! Forking workers: ");
   for (var i = 0; i < num; i++) {
     var worker = cluster.fork();
-    console.log('Staring ' + worker.process.pid);
+    logger.info('Staring ' + worker.process.pid);
   }
   this.waitForFeeds();
 }
@@ -39,9 +40,9 @@ WorkerManager.prototype.waitForFeeds = function() {
 WorkerManager.prototype.refreshQueue = function(){
   var _this = this;
   this.redis.lockedFeeds(function(feed_ids) {
-    console.log("Locked feeds: "+ JSON.stringify(feed_ids));
+    logger.info("Locked feeds: "+ JSON.stringify(feed_ids));
     if (feed_ids >= Constants.MaxRunningJobs) {
-      console.log("Maximum jobs are locked for this machine, skipping...");
+      logger.info("Maximum jobs are locked for this machine, skipping...");
       _this.waitForFeeds();
       return;
     } else {
@@ -58,7 +59,7 @@ WorkerManager.prototype.refreshQueue = function(){
 
         _this.waitForFeeds();
       }).error(function(error){
-        console.log("Could not fetch new feeds: "+ error);
+        logger.info("Could not fetch new feeds: "+ error);
         _this.waitForFeeds();
       });
     }
