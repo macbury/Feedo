@@ -6,8 +6,7 @@ exports.index = function(req, res){
   var xml = new asyncxml.Builder({pretty:false})
   streamify(xml).stream.pipe(res);
   var date = new Date();
-
-  var db = req.get('dbHelper');
+  var db = req.app.get('dbHelper');
 
   db.Feed.findAll().success(function(feeds) {
     console.log(feeds);
