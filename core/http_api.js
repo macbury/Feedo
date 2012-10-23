@@ -19,6 +19,14 @@ app.configure('development', function(){
   app.use(express.errorHandler());
 });
 
+function error(status, msg) {
+  var err = new Error(msg);
+  err.status = status;
+  return err;
+}
+
+var apiKeys = ['test'];
+
 app.use('/api', function(req, res, next){
   var key = req.query['api-key'];
 
@@ -39,6 +47,11 @@ app.use(function(err, req, res, next){
   res.send(err.status || 500, { error: err.message });
 });
 
+app.use(app.router);
+
+app.get('/api', routes.index);
+app.get('/api/users', user.list);
+
 // our custom JSON 404 middleware. Since it's placed last
 // it will be the last middleware called, if all others
 // invoke next() and do not respond.
@@ -46,10 +59,6 @@ app.use(function(req, res){
   res.send(404, { error: "Lame, can't find that" });
 });
 
-app.use(app.router);
-
-app.get('/', routes.index);
-app.get('/users', user.list);
 
 exports.startHttpServer = function(config, dbHelper) {
   app.configure(function(){
