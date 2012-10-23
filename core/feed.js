@@ -8,11 +8,10 @@ var RedisConstants = require("./constants").RedisConstants;
 
 var RefreshTime = 5;
 
-function Feed(obj, redisClient, dbHelper) {
+function Feed(obj, dbHelper) {
   this.dbObject = obj;
   console.log("New feed parser for: "+this.dbObject.id)
   this.broken = false;
-  this.redisClient = redisClient;
   this.fetchCount  = 0;
   this.parser = new FeedMe();
   this.dbHelper = dbHelper;
@@ -124,7 +123,6 @@ Feed.prototype.onEnd = function() {
   this.dbObject.nextPull.addMinutes(RefreshTime * (this.dbObject.errorCount + 1));
   this.dbObject.save();
   console.log("Finished, removing lock from feed, next check will be on: "+ JSON.stringify(this.dbObject.nextPull) + " for feed" +this.dbObject.id);
-  this.redisClient.lrem(RedisConstants.FeedLock, 0, this.dbObject.id.toString());
 }
 
 exports.Feed = Feed;

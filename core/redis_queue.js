@@ -9,7 +9,7 @@ function RedisQueue(config) {
 RedisQueue.prototype.lockedFeeds = function(cb) {
   this.redisClient.lrange(RedisConstants.FeedLock, 0,-1, function(error, lockedFeedsArray) {
     if (error) {
-      console.error(error);
+      console.error("Could not fetch locked feeds", error);
     } else {
       var a = lockedFeedsArray;
       if (lockedFeedsArray == null || lockedFeedsArray.length == 0) {
@@ -23,6 +23,17 @@ RedisQueue.prototype.lockedFeeds = function(cb) {
 RedisQueue.prototype.addFeedToQueue = function(feedModel) {
   this.redisClient.lpush(RedisConstants.FeedLock, feedModel.id.toString());
   console.log("Adding "+feedModel.url + " to queue");
+}
+
+RedisQueue.prototype.fetchFeedModelId = function(callback) {
+  this.redisClient.lpop(RedisConstants.FeedLock, function(error, feedModelID) {
+    if (error) {
+      console.error("Could not fetch locked feed", error);
+    } else if(feedModelID) {
+      console.log("Removed from queue feed: "+feedModelID);
+      callback(feedModelID);
+    }
+  });
 }
 
 exports.RedisQueue = RedisQueue;
