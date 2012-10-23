@@ -18,6 +18,6 @@
     "sequelize":"*",
     "date-utils": "*",
     "feedparser": "git://github.com/danmactough/node-feedparser.git", 
-    "xmlbuilder": "*"
+    "asyncxml": "*"
   }
 }

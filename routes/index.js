@@ -1,10 +1,24 @@
-var builder = require('xmlbuilder');
+var asyncxml = require('asyncxml')
 
 exports.index = function(req, res){
-  var xml = builder.create('root')
-  .ele('xmlbuilder', {'for': 'node-js'})
-    .ele('repo', {'type': 'git'}, 'git://github.com/oozcitak/xmlbuilder-js.git')
-  .end({ pretty: true});
-  res.contentType("text/xml");
-  res.send(xml);  
+  var xml = new asyncxml.Builder({pretty:true})
+
+  xml.on('raw', function (chunk) {
+    console.log("Data");
+    console.log(chunk);
+  })
+
+  xml.tag("xml", {version:"1.0"})
+        .tag("list")
+            .tag("entry", function () {
+                this.attr('id', 1)
+            }).up()
+            .tag("entry", {id:2}, "foo").up()
+        .up()
+    .up()
+.end();
+    
+  
+  //res.contentType("text/xml");
+  res.send('ok');  
 };

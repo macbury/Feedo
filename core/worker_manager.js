@@ -27,7 +27,7 @@ WorkerManager.prototype.startWorkers = function(num) {
     var worker = cluster.fork();
     logger.info('Staring ' + worker.process.pid);
   }
-  this.waitForFeeds();
+  //this.waitForFeeds();
 }
 
 WorkerManager.prototype.waitForFeeds = function() {
