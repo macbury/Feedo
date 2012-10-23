@@ -26,7 +26,7 @@ RedisQueue.prototype.addFeedToQueue = function(feedModel) {
 }
 
 RedisQueue.prototype.fetchFeedModelId = function(callback) {
-  this.redisClient.lpop(RedisConstants.FeedLock, function(error, feedModelID) {
+  this.redisClient.blpop(RedisConstants.FeedLock, 0, function(error, feedModelID) {
     if (error) {
       logger.error("Could not fetch locked feed", error);
     } else if(feedModelID) {

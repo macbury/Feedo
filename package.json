@@ -9,7 +9,6 @@
     "express": "3.0.0rc5",
     "request": "*",
     "feedme": "git://github.com/fent/feedme.js.git",
-    "readability": "git://github.com/arrix/node-readability.git",
     "nlogger": "0.3.1",
     "config": "0.4.17",
     "redis": "*",
@@ -19,6 +18,8 @@
     "date-utils": "*",
     "feedparser": "git://github.com/danmactough/node-feedparser.git", 
     "asyncxml": "*",
-    "dt-stream": "*"
+    "dt-stream": "*", 
+    "html5": "*",
+    "jsdom": "*"
   }
 }

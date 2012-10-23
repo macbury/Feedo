@@ -55,8 +55,11 @@ exports.index = function(req, res){
     for (var i = 0; i < feeds.length; i++) {
       var feed = feeds[i];
       var channel = channels.tag("article");
-        channel.tag("title", feed.title).up();
-        channel.tag("content").text(feed.body).up();
+        channel.tag("uid", feed.id).up();
+        channel.tag("title").text(feed.title, { escape: true }).up();
+        channel.tag("url").text(feed.url, { escape: true }).up();
+        channel.tag("pubDate").text(feed.pubDate.toString(), { escape: true }).up();
+        channel.tag("content").raw('<![CDATA['+feed.body+']]>').up();
       channel.up();
     };
 

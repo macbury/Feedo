@@ -62,7 +62,7 @@ Feed.prototype.onArticle = function(article) {
   this.dbObject.title = article.meta.title;
   
   var item = new Item(url); 
-  item.onFinish = function () {
+  item.onFinish = function (success) {
     var body = item.body;
     if (body == null || body.length < 60) {
       body = article.description;
@@ -72,14 +72,12 @@ Feed.prototype.onArticle = function(article) {
       url:     url,
       title:   article.title,
       pubDate: article.pubDate,
-      body:    item.body,
+      body:    body,
       FeedId: _this.dbObject.id
-    }).success(function(){
-      _this.fetchCount--;
-      _this.checkIfFinished();
-    }).error(function(error) {
-      logger.error(error);
     });
+
+    _this.fetchCount--;
+    _this.checkIfFinished();
   }
 
   this.dbObject.getItems({ where: { url: url } }).success(function(items){
@@ -107,7 +105,7 @@ Feed.prototype.checkIfFinished = function() {
 
 Feed.prototype.onEnd = function() {
   logger.info("Ending syncing feed");
-  this.endCallback(this);
+  
   if (this.broken) {
     this.dbObject.errorCount += 1;
   } else {
@@ -122,6 +120,7 @@ Feed.prototype.onEnd = function() {
   this.dbObject.nextPull = new Date();
   this.dbObject.nextPull.addMinutes(Constants.RefreshEvery * (this.dbObject.errorCount + 1));
   this.dbObject.save();
+  this.endCallback(this);
   logger.info("Finished, removing lock from feed, next check will be on: "+ JSON.stringify(this.dbObject.nextPull) + " for feed" +this.dbObject.id);
 }
 

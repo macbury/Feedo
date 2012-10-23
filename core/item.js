@@ -1,4 +1,4 @@
-var readability = require('readability');
+var readability = require('./readability');
 var request     = require('request');
 var logger      = require('./logger').logger(module);
 function Item(url) {
@@ -19,10 +19,10 @@ Item.prototype.download = function() {
     if (!error && response.statusCode == 200) {
       readability.parse(body, _this.url, function(result) {
         _this.body = result.content;
-        _this.onFinish();
+        _this.onFinish(true);
       });
     } else {
-      _this.onFinish();
+      _this.onFinish(false);
     }
   });
 }

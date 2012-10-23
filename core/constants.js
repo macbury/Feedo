@@ -1,6 +1,6 @@
 
 var RedisConstants = {
-  FeedLock: "locked_feed_are"
+  FeedLock: "feeds:pending"
 }
 
 exports.RefreshEvery		        = 10; //minutes to next feed refresh
