@@ -30,7 +30,6 @@ DatabaseHelper.prototype.buildFeed = function() {
     lastRefresh: { type: Sequelize.DATE, defaultValue: Sequelize.NOW },
     feedType: { type: Sequelize.STRING }
   },{});
-  this.Feed.sync();
 }
 
 DatabaseHelper.prototype.buildItem = function() {
@@ -42,7 +41,13 @@ DatabaseHelper.prototype.buildItem = function() {
   },{});
   this.Feed.hasMany(this.Item);
   this.Item.belongsTo(this.Feed);
-  this.Item.sync();
+}
+
+DatabaseHelper.prototype.sync = function() {
+  var chainer = new Sequelize.Utils.QueryChainer();
+  chainer.add(this.Feed.sync());
+  chainer.add(this.Item.sync());
+  return chainer;
 }
 
 

@@ -1,4 +1,3 @@
-var FeedParser = require('feedparser');
 var request    = require('request');
 var FeedMe = require('feedme')
   , parser = new FeedMe();
@@ -91,7 +90,7 @@ Feed.prototype.onArticle = function(article) {
       _this.newItems = true;
       item.download();  
     } else {
-      console.log("Skipping article to download :"+ url);
+      console.log("Skipping article to download: "+ url);
     }
   }).error(function(error){
     console.error(error);

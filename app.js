@@ -1,21 +1,12 @@
 var cluster         = require('cluster');
-var numCPUs         = require('os').cpus().length;
-var http            = require('http');
-var app             = require("./core/http_api").app;
+var app             = require("./core/http_api");
 var service         = require("./core/service");
 var CONFIG          = require('config').development;
 var DatabaseHelper  = require("./core/db").DatabaseHelper;
-
-numCPUs = 1;
+var WorkerManager   = require("./core/worker_manager").WorkerManager;
 
 if (cluster.isMaster) {
-  for (var i = 0; i < numCPUs; i++) {
-    cluster.fork();
-  }
-
-  cluster.on('exit', function(worker, code, signal) {
-    console.log('worker ' + worker.process.pid + ' died');
-  });
+  var manager = new WorkerManager(CONFIG);
 } else {
   var dbHelper = new DatabaseHelper(CONFIG.db);
   service.sync(dbHelper, CONFIG);

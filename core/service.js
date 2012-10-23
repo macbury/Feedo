@@ -60,7 +60,7 @@ exports.sync = function(dbHelperTemp, config) {
   sender = new gcm.Sender(config.gcm.key);
   redisClient.del(RedisConstants.FeedLock);
   dbHelper = dbHelperTemp;
-  setInterval(function(){
+  /*setInterval(function(){
     getFeedsToSync();
-  }, Constants.AskForNewFeeds * 1000);
+  }, Constants.AskForNewFeeds * 1000);*/
 }

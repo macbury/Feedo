@@ -7,15 +7,15 @@
   },
   "dependencies": {
     "express": "3.0.0rc5",
-    "jade": "*",
     "request": "*",
     "feedme": "git://github.com/fent/feedme.js.git",
     "readability": "git://github.com/arrix/node-readability.git",
     "nlogger": "0.3.1",
     "config": "0.4.17",
-    "sequelize": "*",
-    "hiredis": "*",
-    "redis": "git://github.com/mranney/node_redis.git",
-    "node-gcm": "git://github.com/ToothlessGear/node-gcm.git"
+    "redis": "*",
+    "node-gcm": "*",
+    "hiredis": "0.1.14",
+    "sequelize":"*",
+    "date-utils": "*"
   }
 }
