@@ -59,7 +59,8 @@ Feed.prototype.onArticle = function(article) {
     console.log("URL for this article is null!", article);
     return;
   }
-
+  this.dbObject.title = article.meta.title;
+  
   var item = new Item(url); 
   item.onFinish = function () {
     var body = item.body;
