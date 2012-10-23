@@ -58,7 +58,7 @@ function getFeedsToSync() {
 exports.sync = function(dbHelperTemp, config) {
   console.log('Staring sync, This process is pid ' + process.pid);
   sender = new gcm.Sender(config.gcm.key);
-  redisClient.del(RedisConstants.FeedLock);
+  
   dbHelper = dbHelperTemp;
   /*setInterval(function(){
     getFeedsToSync();
