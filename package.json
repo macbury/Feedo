@@ -16,6 +16,7 @@
     "node-gcm": "*",
     "hiredis": "0.1.14",
     "sequelize":"*",
-    "date-utils": "*"
+    "date-utils": "*",
+    "feedparser": "git://github.com/danmactough/node-feedparser.git"
   }
 }

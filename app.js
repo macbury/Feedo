@@ -5,6 +5,8 @@ var CONFIG          = require('config').development;
 var DatabaseHelper  = require("./core/db").DatabaseHelper;
 var WorkerManager   = require("./core/worker_manager").WorkerManager;
 
+process.setMaxListeners(0);
+
 if (cluster.isMaster) {
   var manager = new WorkerManager(CONFIG);
 } else {

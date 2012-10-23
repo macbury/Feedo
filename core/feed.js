@@ -1,6 +1,5 @@
 var request    = require('request');
-var FeedMe = require('feedme')
-  , parser = new FeedMe();
+var FeedParser = require('feedparser');
 var Item       = require('./item').Item;
 require('date-utils');
 
@@ -13,23 +12,19 @@ function Feed(obj, dbHelper) {
   console.log("New feed parser for: "+this.dbObject.id)
   this.broken = false;
   this.fetchCount  = 0;
-  this.parser = new FeedMe();
+  this.parser = new FeedParser();
   this.dbHelper = dbHelper;
   this.newItems = false;
   var _this   = this;
 
-  this.parser.on('title', function(title) {
+  /*this.parser.on('title', function(title) {
     console.log('title of feed is', title);
     _this.dbObject.title = title;
-  });
+  });*/
 
-  this.parser.on("type", function(type) {
-    console.log("Feed type: "+ type);
-    _this.feedType = type;
-  });
 
-  this.parser.on("item", function(item) {
-    _this.onArticle(item);
+  this.parser.on("article", function(article) {
+    _this.onArticle(article);
   });
 
   this.parser.on("end", function() {
@@ -46,7 +41,8 @@ Feed.prototype.start = function(endCallback) {
       _this.dbObject.errorMessage = JSON.stringify(error);
       _this.broken = true;
       _this.onEnd();
-    }).pipe(this.parser)
+    }).pipe(this.parser.stream);
+
   } catch(error) {
     this.dbObject.errorMessage = JSON.stringify(error);
     this.broken = true;
@@ -57,31 +53,20 @@ Feed.prototype.start = function(endCallback) {
 Feed.prototype.onArticle = function(article) {
   var _this = this;
 
-  var url = '';
-
-  if (typeof(article.link) == 'string') {
-    url = article.link;  
-  } if (typeof(article.link) == 'object') {
-    url = article.link[0].href;
-  } else {
-    url = article.link.href;
-  }
+  var url = article.link;
 
   if (url == null) {
     console.log("URL for this article is null!", article);
     return;
-  };
+  }
 
   var item = new Item(url); 
   item.onFinish = function () {
     var body = item.body;
-    if (body == null || body.length < 10) {
-      if (typeof(article.content) == 'string') {
-        body = article.content;  
-      } else {
-        body = article.content.text;
-      }
-    };
+    if (body == null || body.length < 60) {
+      body = article.description;
+    }
+
     _this.dbHelper.Item.create({
       url:     url,
       title:   article.title,
