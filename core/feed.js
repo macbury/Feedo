@@ -61,12 +61,27 @@ Feed.prototype.onArticle = function(article) {
 
   if (typeof(article.link) == 'string') {
     url = article.link;  
+  } if (typeof(article.link) == 'object') {
+    url = article.link[0].href;
   } else {
     url = article.link.href;
   }
 
+  if (url == null) {
+    console.log("URL for this article is null!", article);
+    return;
+  };
+
   var item = new Item(url); 
   item.onFinish = function () {
+    var body = item.body;
+    if (body == null || body.length < 10) {
+      if (typeof(article.content) == 'string') {
+        body = article.content;  
+      } else {
+        body = article.content.text;
+      }
+    };
     _this.dbHelper.Item.create({
       url:     url,
       title:   article.title,
