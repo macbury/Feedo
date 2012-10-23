@@ -3,10 +3,9 @@ var FeedParser = require('feedparser');
 var Item       = require('./item').Item;
 var logger     = require('./logger').logger(module);
 require('date-utils');
+var Constants      = require("./constants");
+var RedisConstants = Constants.RedisConstants;
 
-var RedisConstants = require("./constants").RedisConstants;
-
-var RefreshTime = 5;
 
 function Feed(obj, dbHelper) {
   this.dbObject = obj;
@@ -121,7 +120,7 @@ Feed.prototype.onEnd = function() {
   }
 
   this.dbObject.nextPull = new Date();
-  this.dbObject.nextPull.addMinutes(RefreshTime * (this.dbObject.errorCount + 1));
+  this.dbObject.nextPull.addMinutes(Constants.RefreshEvery * (this.dbObject.errorCount + 1));
   this.dbObject.save();
   logger.info("Finished, removing lock from feed, next check will be on: "+ JSON.stringify(this.dbObject.nextPull) + " for feed" +this.dbObject.id);
 }
