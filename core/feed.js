@@ -67,14 +67,13 @@ Feed.prototype.onArticle = function(article) {
 
   var item = new Item(url); 
   item.onFinish = function () {
-    var itemDBObj = _this.dbHelper.Item.build({
+    _this.dbHelper.Item.create({
       url:     url,
       title:   article.title,
       pubDate: article.pubDate,
-      body:    item.body
-    });
-
-    _this.dbObject.addItem(itemDBObj).success(function(){
+      body:    item.body,
+      FeedId: _this.dbObject.id
+    }).success(function(){
       _this.fetchCount--;
       _this.checkIfFinished();
     }).error(function(error) {
