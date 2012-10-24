@@ -1,11 +1,12 @@
 var express = require('express')
-  , routes = require('../routes')
-  , user = require('../routes/user')
-  , http = require('http')
-  , path = require('path');
+  , routes  = require('../routes')
+  , user    = require('../routes/user')
+  , http    = require('http')
+  , path    = require('path');
+var logger  = require('./logger').logger(module);
+var gzippo  = require('gzippo');
 
-var app = express();
-var logger       = require('./logger').logger(module);
+var app     = express();
 
 app.configure(function(){
   app.set('port', process.env.PORT || 3000);
@@ -13,6 +14,7 @@ app.configure(function(){
   app.use(express.logger('dev'));
   app.use(express.bodyParser());
   app.use(express.methodOverride());
+  app.use(gzippo.compress());
 });
 
 app.configure('development', function(){

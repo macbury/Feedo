@@ -20,6 +20,7 @@
     "asyncxml": "*",
     "dt-stream": "*", 
     "html5": "*",
-    "jsdom": "*"
+    "jsdom": "*",
+    "gzippo": "git://github.com/macbury/gzippo.git"
   }
 }

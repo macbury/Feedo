@@ -15,9 +15,18 @@ function DatabaseHelper(config) {
   });
 
   logger.info("Appending schema");
-
+  this.buildImage();
   this.buildFeed();
   this.buildItem();
+}
+
+DatabaseHelper.prototype.buildImage = function() {
+  this.Image = this.db.define('Image', {
+    name:        { type: Sequelize.STRING, allowNull: false },
+    description: { type: Sequelize.TEXT },
+    url:         { type: Sequelize.STRING, allowNull: false },
+    mimeType:    { type: Sequelize.STRING, allowNull: false },
+  },{});
 }
 
 DatabaseHelper.prototype.buildFeed = function() {
@@ -41,11 +50,14 @@ DatabaseHelper.prototype.buildItem = function() {
   },{});
   this.Feed.hasMany(this.Item);
   this.Item.belongsTo(this.Feed);
+  this.Item.hasMany(this.Image);
+  this.Image.belongsTo(this.Item);
 }
 
 DatabaseHelper.prototype.sync = function() {
   var chainer = new Sequelize.Utils.QueryChainer();
   chainer.add(this.Feed.sync());
+  chainer.add(this.Image.sync());
   chainer.add(this.Item.sync());
   return chainer;
 }

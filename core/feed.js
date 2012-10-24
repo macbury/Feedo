@@ -107,7 +107,10 @@ Feed.prototype.onEnd = function() {
   logger.info("Ending syncing feed");
   
   if (this.broken) {
-    this.dbObject.errorCount += 1;
+    if (this.dbObject.errorCount < Constants.MaxFeedFetchErrorCount) {
+      this.dbObject.errorCount += 1;
+    }
+    
   } else {
     this.dbObject.errorMessage = null;
     this.dbObject.errorCount = 0;
