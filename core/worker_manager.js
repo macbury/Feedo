@@ -5,7 +5,6 @@ var RedisQueue      = require('./redis_queue').RedisQueue;
 var Constants       = require("./constants");
 var RedisConstants  = require("./constants").RedisConstants;
 var logger          = require('./logger').logger(module);
-numCPUs = 1;
 
 function WorkerManager(config) {
   var _this     = this;

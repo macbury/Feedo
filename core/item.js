@@ -7,7 +7,7 @@ var fs          = require("fs");
 function Item(url) {
   //console.log(article);
   this.url = url;
-  this.images = [];
+  this.images_fetched = [];
   this.body = null;
 }
 
@@ -33,6 +33,7 @@ Item.prototype.download = function() {
 // { url: fullURL, hash: hash, description: image.alt, ext: extName }
 Item.prototype.downloadImages = function(images) {
   this.images_to_download = images;
+  this.images_fetched = [];
   this.downloadNextImage();
 }
 
@@ -46,7 +47,7 @@ Item.prototype.downloadNextImage = function() {
     var fileName = path.join(__dirname, '../data', image.hash+image.ext);
 
     request({url: image.url, encoding: 'binary'}, function(error, response, content) {
-      if (error != null || Constants.ImageMimeTypes.indexOf(response.headers["content-type"]) > -1) {
+      if (response != null && Constants.ImageMimeTypes.indexOf(response.headers["content-type"]) > -1) {
         var contentType = response.headers["content-type"];
         var extName     = contentType.split('/')[1];
         var buffer      = new Buffer(content, 'binary');
@@ -56,7 +57,8 @@ Item.prototype.downloadNextImage = function() {
           if (err) {
             logger.error("Could not download: ", { error: err, image: image });
           } else {
-            _this.images.push(image);
+            image["mimeType"] = contentType;
+            _this.images_fetched.push(image);
           }
           _this.downloadNextImage();
         });

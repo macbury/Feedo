@@ -67,7 +67,24 @@ exports.index = function(req, res){
     };
 
     channels.up();
-    root.up().end();
+
+    var images_tag = root.tag("images");
+    db.Image.findAll().complete(function(error, images) {
+
+      for (var i = 0; i < images.length; i++) {
+        var image = images[i];
+        var image_tag = channels.tag("image");
+          image_tag.tag("name").text(image.name).up();
+          image_tag.tag("url").text(image.url).up();
+          image_tag.tag("description").text(image.description).up();
+          image_tag.tag("data").raw('<![CDATA[test]]>').up();
+        image_tag.up();
+      };
+
+      images_tag.up();
+      root.up().end();
+    });
+    
   }).error(function(){
     root.up().end();
   });

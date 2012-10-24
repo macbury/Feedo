@@ -1,11 +1,12 @@
-var request    = require('request');
-var FeedParser = require('feedparser');
-var Item       = require('./item').Item;
-var logger     = require('./logger').logger(module);
-require('date-utils');
+var request        = require('request');
+var FeedParser     = require('feedparser');
+var Item           = require('./item').Item;
+var logger         = require('./logger').logger(module);
 var Constants      = require("./constants");
 var RedisConstants = Constants.RedisConstants;
+var Sequelize      = require('sequelize');
 
+require('date-utils');
 
 function Feed(obj, dbHelper) {
   this.dbObject = obj;
@@ -50,6 +51,11 @@ Feed.prototype.start = function(endCallback) {
   }
 }
 
+Feed.prototype.popFeed = function() {
+  this.fetchCount--;
+  this.checkIfFinished();
+}
+
 Feed.prototype.onArticle = function(article) {
   var _this = this;
 
@@ -74,10 +80,31 @@ Feed.prototype.onArticle = function(article) {
       pubDate: article.pubDate,
       body:    body,
       FeedId: _this.dbObject.id
-    });
+    }).complete(function(error, itemModel) {
+      if (error) {
+        logger.error(error);
+        _this.popFeed();
+      } else {
+        var chainer = new Sequelize.Utils.QueryChainer();
+        for (var i = 0; i < item.images_fetched.length; i++) {
+          var image = item.images_fetched[i];
+          chainer.add(_this.dbHelper.Image.create({
+            ItemId: itemModel.id,
+            url: image.url,
+            name: image.hash+image.ext,
+            mimeType: image.mimeType,
+            description: image.description
+          }));
+        }
 
-    _this.fetchCount--;
-    _this.checkIfFinished();
+        chainer.run().complete(function(error, im) {
+          if (error) {
+            logger.error(error);
+          }
+          _this.popFeed();
+        });
+      }
+    });
   }
 
   this.dbObject.getItems({ where: { url: url } }).success(function(items){
