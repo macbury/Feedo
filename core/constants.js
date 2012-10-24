@@ -9,3 +9,4 @@ exports.MaxRunningJobsPerWorker = 2;
 exports.AskForNewFeeds          = 2;
 exports.MaxFeedFetchErrorCount  = 5;
 exports.RedisConstants          = RedisConstants;
+exports.ImageMimeTypes          = ["image/png", "image/jpg", "image/jpeg", "image/gif"];

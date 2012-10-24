@@ -7,6 +7,9 @@ var dbg = (typeof console !== 'undefined') ? function(s) {
     }
 } : function() {};
 
+var URL         = require('url');
+var Path        = require('path');
+var crypto      = require('crypto');
 /*
  * Readability. An Arc90 Lab Experiment. 
  * Website: http://lab.arc90.com/experiments/readability
@@ -107,13 +110,10 @@ var readability = {
             articleContent = readability.getDefaultArticleContent();
         }
 
-        overlay.id              = "readOverlay";
-        innerDiv.id             = "readInner";
-
         /* Apply user-selected styling */
         document.body.className = readStyle;
         document.dir            = readability.getSuggestedDirection(articleTitle.innerHTML);
-
+/*
         if (readStyle === "style-athelas" || readStyle === "style-apertura"){
             overlay.className = readStyle + " rdbTypekit";
         }
@@ -124,13 +124,13 @@ var readability = {
 
         if(typeof(readConvertLinksToFootnotes) !== 'undefined' && readConvertLinksToFootnotes === true) {
             readability.convertLinksToFootnotes = true;
-        }
+        }*/
 
         /* Glue the structure of our document together. */
-        innerDiv.appendChild( articleTitle   );
+        //innerDiv.appendChild( articleTitle   );
         innerDiv.appendChild( articleContent );
-        innerDiv.appendChild( articleFooter  );
-         overlay.appendChild( articleTools   );
+        //innerDiv.appendChild( articleFooter  );
+         //overlay.appendChild( articleTools   );
          overlay.appendChild( innerDiv       );
 
         /* Clear the old HTML, insert the new content. */
@@ -147,7 +147,7 @@ var readability = {
 
         /**
          * If someone tries to use Readability on a site's root page, give them a warning about usage.
-        **/
+        
         if((window.location.protocol + "//" + window.location.host + "/") === window.location.href)
         {
             articleContent.style.display = "none";
@@ -157,7 +157,7 @@ var readability = {
                     "If you'd like to try rendering this page anyway, <a onClick='javascript:document.getElementById(\"readability-warning\").style.display=\"none\";document.getElementById(\"readability-content\").style.display=\"block\";'>click here</a> to continue.";
 
             innerDiv.insertBefore( rootWarning, articleContent );
-        }
+        }**/
 
         readability.postProcessContent(articleContent);
 
@@ -2166,6 +2166,7 @@ function removeClassNames(e) {
   }           
 }
 
+
 function start(w, options, cb) {
   window = w;
   document = w.document;
@@ -2191,14 +2192,36 @@ function start(w, options, cb) {
   if (options.removeReadabilityArtifacts) removeReadabilityArtifacts();
   if (options.removeClassNames) removeClassNames();
 
-  //dbg('[Readability] done');
+  var baseURL = document.location.protocol+"//"+document.location.host;
+  dbg('Base URL: '+baseURL);
+
+  var hrefs = document.getElementsByTagName("a");
+  for (var i = 0; i < hrefs.length; i++) {
+    var a = hrefs[i];
+    if (a.href) {
+      a.href = URL.resolve(baseURL, a.href);
+      dbg('New link: '+a.href);
+    }
+  };
+
   var images = document.getElementsByTagName("img");
   var images_url = [];
+
+  //console.log(document.location.host);
   for(var i = 0; i < images.length; i++) {
-    images_url.push(images[i].src);
+    var image = images[i];
+    var src   = image.src;
+    if (src) {
+      var fullURL = URL.resolve(baseURL, src);
+      dbg('fullURL: '+fullURL);
+      var hash    = crypto.createHash('sha1').update(fullURL).digest("hex");
+      var extName = Path.extname(fullURL).split("?")[0];
+      images_url.push({ url: fullURL, hash: hash, description: image.alt, ext: extName });
+      image.src = hash + extName;
+    }
+    
   }
-                          
-  cb(document.body.innerHTML, images_url);
+  cb(document.body.innerHTML.toString('utf8').replace('<![CDATA[', '').replace(']]>',''), images_url);
 }
 
 var HTML5;

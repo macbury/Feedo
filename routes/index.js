@@ -42,12 +42,15 @@ exports.index = function(req, res){
 };*/
 
 exports.index = function(req, res){
-  res.contentType("text/xml");
   var xml = new asyncxml.Builder({pretty:true})
-  streamify(xml).stream.pipe(res);
   var date = new Date();
   var db = req.app.get('dbHelper');
-  var root = xml.tag("xml", {version:"1.0"});
+
+  res.contentType("text/xml");
+  var xmlStream = streamify(xml).stream;
+  res.write('<?xml version="1.0" encoding="UTF-8"?>\n');
+  xmlStream.pipe(res);
+  var root = xml.tag("api", {version:"1.0"});
 
   db.Item.findAll().success(function(feeds) {
     var channels = root.tag("articles");
@@ -58,7 +61,7 @@ exports.index = function(req, res){
         channel.tag("uid", feed.id).up();
         channel.tag("title").text(feed.title, { escape: true }).up();
         channel.tag("url").text(feed.url, { escape: true }).up();
-        channel.tag("pubDate").text(feed.pubDate.toString(), { escape: true }).up();
+        //channel.tag("pubDate").text(feed.pubDate.toString(), { escape: true }).up();
         channel.tag("content").raw('<![CDATA['+feed.body+']]>').up();
       channel.up();
     };
