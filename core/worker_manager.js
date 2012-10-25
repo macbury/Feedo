@@ -7,17 +7,21 @@ var RedisConstants  = require("./constants").RedisConstants;
 var logger          = require('./logger').logger(module);
 
 function WorkerManager(config) {
-  var _this     = this;
-  this.dbHelper = new DatabaseHelper(config.db);
-  this.redis    = new RedisQueue(config.redis);
+  var _this       = this;
+  this.dbHelper   = new DatabaseHelper(config.db);
+  this.redis      = new RedisQueue(config.redis);
+  this.maxWorkers = numCPUs;
 
   this.dbHelper.sync().run().success(function(){
-    _this.startWorkers(numCPUs);
+    _this.startWorkers(_this.maxWorkers);
   });
 
 
   cluster.on('exit', function(worker, code, signal) {
-    logger.info('worker ' + worker.process.pid + ' died');
+    logger.error('worker ' + worker.process.pid + ' died');
+
+    var worker = cluster.fork();
+    logger.info('Staring new ' + worker.process.pid);
   });
 }
 
