@@ -28,7 +28,7 @@ WorkerManager.prototype.onWorkerMessage = function(message) {
     logger.info("Workers left: ", this.totalWorkers);
     if (this.totalWorkers <= 0) {
       logger.info("Workers finished spawning. Starting refresh queueu");
-      //this.waitForFeeds(); 
+      this.waitForFeeds(); 
     }
   }
 }

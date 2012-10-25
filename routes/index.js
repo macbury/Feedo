@@ -88,7 +88,7 @@ FeedSyncResponseBuilder.prototype.addNextImage = function() {
   if (image) {
     var filename = path.join(__dirname, '../data/'+image.name);
     logger.info("Loading file: "+ filename);
-    
+
     fs.readFile( filename, function (err, data) {
       if (err) {
         logger.error("Could not load file", err); 
