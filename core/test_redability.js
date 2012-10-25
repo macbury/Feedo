@@ -5,7 +5,7 @@ var fs          = require('fs');
 var charset     = require('charset');
 var Iconv       = require('iconv').Iconv;
 
-var urlLink = 'http://film.wp.pl/idGallery,10761,idPhoto,330074,galeria.html?ticaid=1f689&_ticrsn=3';
+var urlLink = 'http://blog.jogger.pl/2012/10/16/recaptcha-na-joggerze/';
 
 request({ url: urlLink, encoding: 'binary' }, function (error, response, body) {
   var encoding = charset(response.headers, body);
@@ -13,7 +13,7 @@ request({ url: urlLink, encoding: 'binary' }, function (error, response, body) {
   var bufferHtml = new Buffer(body, 'binary');
 
   var html = body.toString();
-  if (encoding != 'utf-8') {
+  if (encoding != 'utf-8') { //todo sometimes they sending utf8 string as encoding ....
     console.log("encoding is not utf-8, but it is:" + encoding);
     var iconv = new Iconv(encoding, 'utf-8');
     body      = iconv.convert(bufferHtml);

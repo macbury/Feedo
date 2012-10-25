@@ -4,6 +4,9 @@ var logger      = require('./logger').logger(module);
 var path        = require('path');
 var Constants   = require("./constants");
 var fs          = require("fs");
+var charset     = require('charset');
+var Iconv       = require('iconv').Iconv;
+
 function Item(url) {
   //console.log(article);
   this.url = url;
@@ -18,9 +21,20 @@ Item.prototype.onFinish = function() {
 Item.prototype.download = function() {
   var _this = this;
   logger.info("Downloading html for page: "+ this.url);
-  request({ url: _this.url, timeout: Constants.ItemDownloadTimeout * 1000 }, function (error, response, body) {
+  request({ url: _this.url, timeout: Constants.ItemDownloadTimeout * 1000, encoding: 'binary' }, function (error, response, body) {
     if (!error && response.statusCode == 200) {
-      readability.parse(body, _this.url, function(result) {
+
+      var encoding = charset(response.headers, body);
+      var bufferHtml = new Buffer(body, 'binary');
+
+      if (encoding != 'utf-8') {
+        logger.info("encoding is not utf-8, but it is:" + encoding);
+
+        var iconv = new Iconv(encoding, 'utf-8');
+        body      = iconv.convert(bufferHtml);
+      }
+
+      readability.parse(body.toString(), _this.url, function(result) {
         _this.body = result.content;
         _this.downloadImages(result.images);
       });
