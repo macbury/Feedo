@@ -18,6 +18,8 @@ Constant = {
   
 }
 */
+
+http://packagefinder1-enome.dotcloud.com/packages/show/charset
 var url = 'http://mambiznes.pl/public/upload/922.jpg';
 
 
