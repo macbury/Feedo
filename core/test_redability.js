@@ -2,14 +2,29 @@ var readability = require('./readability');
 var request     = require('request');
 var crypto      = require('crypto');
 var fs          = require('fs');
-/*var urlLink ='http://rubyonrails.pl/forum/viewtopic.php?pid=38105#38105';
-request(urlLink, function (error, response, body) {
-  readability.parse(body, urlLink, { debug: true }, function(result) {
+var charset     = require('charset');
+var Iconv       = require('iconv').Iconv;
+
+var urlLink = 'http://film.wp.pl/idGallery,10761,idPhoto,330074,galeria.html?ticaid=1f689&_ticrsn=3';
+
+request({ url: urlLink, encoding: 'binary' }, function (error, response, body) {
+  var encoding = charset(response.headers, body);
+  
+  var bufferHtml = new Buffer(body, 'binary');
+
+  var html = body.toString();
+  if (encoding != 'utf-8') {
+    console.log("encoding is not utf-8, but it is:" + encoding);
+    var iconv = new Iconv(encoding, 'utf-8');
+    body      = iconv.convert(bufferHtml);
+
+  }
+
+  readability.parse(body.toString(), urlLink, { debug: false }, function(result) {
     console.log(result.content);
-    console.log(result.images);
   });
 });
-
+/*
 var url     = 'http://m.natemat.pl/06be2f47a472d427d2b3cce3a0101a31,641,0,0,0.jpg';
 
 var request = require("request");
@@ -17,10 +32,10 @@ var fs      = require("fs");
 Constant = {
   
 }
-*/
+
 
 http://packagefinder1-enome.dotcloud.com/packages/show/charset
-var url = 'http://mambiznes.pl/public/upload/922.jpg';
+/*var url = 'http://mambiznes.pl/public/upload/922.jpg';
 
 
 
@@ -34,7 +49,7 @@ request({url: url, encoding: 'binary'}, function(error, response, content) {
     if (err) throw err;
     console.log("finished!");
   });
-});
+});*/
 
 //crypto.createHash('sha1').update(url).digest("hex")
 /*

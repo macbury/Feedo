@@ -21,6 +21,8 @@
     "dt-stream": "*", 
     "html5": "*",
     "jsdom": "*",
-    "gzippo": "git://github.com/macbury/gzippo.git"
+    "gzippo": "git://github.com/macbury/gzippo.git",
+    "charset": "*",
+    "iconv": "*"
   }
 }
