@@ -27,10 +27,10 @@ function nextPopQueue() {
 function getFeedsToSync() {
   if (RunningFeeds.length >= Constants.MaxRunningJobsPerWorker) {
     logger.info("There are: " + RunningFeeds.length + " parsers of max on this worker: "+Constants.MaxRunningJobsPerWorker);
-    /*for (var i = 0; i < RunningFeeds.length; i++) {
-      logger.debug(RunningFeeds[i].stringStatus());
+    for (var i = 0; i < RunningFeeds.length; i++) {
+      //logger.debug(RunningFeeds[i].stringStatus());
       RunningFeeds[i].checkIfFinished();
-    }*/
+    }
     nextPopQueue();
     return;
   };

@@ -5,7 +5,7 @@ var fs          = require('fs');
 var charset     = require('charset');
 var Iconv       = require('iconv').Iconv;
 
-var urlLink = 'http://blog.jogger.pl/2012/10/16/recaptcha-na-joggerze/';
+var urlLink = 'http://www.spidersweb.pl/2012/06/jednak-tablety-od-microsoftu-surface-dwoch-wersjach-niezlymi-dodatkami.html';
 
 request({ url: urlLink, encoding: 'binary' }, function (error, response, body) {
   var encoding = charset(response.headers, body);

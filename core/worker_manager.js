@@ -15,7 +15,6 @@ function WorkerManager(config) {
     _this.startWorkers(numCPUs);
   });
 
-  process.on('message', this.onWorkerMessage);
 
   cluster.on('exit', function(worker, code, signal) {
     logger.info('worker ' + worker.process.pid + ' died');
@@ -26,10 +25,10 @@ WorkerManager.prototype.onWorkerMessage = function(message) {
   logger.info("Recived worker message: " + message);
   if (Constants.WorkerStatus.Ready == message) {
     this.totalWorkers--;
-
+    logger.info("Workers left: ", this.totalWorkers);
     if (this.totalWorkers <= 0) {
       logger.info("Workers finished spawning. Starting refresh queueu");
-      this.waitForFeeds();
+      //this.waitForFeeds(); 
     }
   }
 }
@@ -37,12 +36,13 @@ WorkerManager.prototype.onWorkerMessage = function(message) {
 WorkerManager.prototype.startWorkers = function(num) {
   logger.info("DB synced! Forking workers: ");
   this.totalWorkers = 0;
+  var _this = this;
   for (var i = 0; i < num; i++) {
     var worker = cluster.fork();
+    worker.on('message', function(message) { _this.onWorkerMessage(message); });
     this.totalWorkers++;
     logger.info('Staring ' + worker.process.pid);
   }
-  this.waitForFeeds();
 }
 
 WorkerManager.prototype.waitForFeeds = function() {

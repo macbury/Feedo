@@ -27,14 +27,16 @@ Item.prototype.download = function() {
       var encoding = charset(response.headers, body);
       var bufferHtml = new Buffer(body, 'binary');
 
-      if (encoding != 'utf-8') {
+      if (encoding && !encoding.match(/utf/)) {
         logger.info("encoding is not utf-8, but it is:" + encoding);
 
         var iconv = new Iconv(encoding, 'utf-8');
         body      = iconv.convert(bufferHtml);
+      } else {
+        body = bufferHtml;
       }
 
-      readability.parse(body.toString(), _this.url, function(result) {
+      readability.parse(body.toString('utf-8'), _this.url, function(result) {
         _this.body = result.content;
         _this.downloadImages(result.images);
       });
