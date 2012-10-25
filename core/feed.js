@@ -16,6 +16,7 @@ function Feed(obj, dbHelper) {
   this.parser = new FeedParser();
   this.dbHelper = dbHelper;
   this.newItems = false;
+  this.fetchedXML = false;
   var _this   = this;
 
   /*this.parser.on('title', function(title) {
@@ -29,6 +30,7 @@ function Feed(obj, dbHelper) {
   });
 
   this.parser.on("end", function() {
+    _this.fetchedXML = true;
     _this.checkIfFinished();
   });
 
@@ -38,15 +40,17 @@ Feed.prototype.start = function(endCallback) {
   this.endCallback = endCallback;
   var _this   = this;
   try {
-    request(this.dbObject.url, { followAllRedirects: true, timeout: 10000 }).on("error", function(error){
+    request(this.dbObject.url, { followAllRedirects: true, timeout: Constants.FeedDownloadTimeout * 1000 }).on("error", function(error){
       _this.dbObject.errorMessage = JSON.stringify(error);
       _this.broken = true;
-      _this.onEnd();
+      _this.fetchedXML = true;
+      _this.checkIfFinished();
     }).pipe(this.parser.stream);
 
   } catch(error) {
     this.dbObject.errorMessage = JSON.stringify(error);
     this.broken = true;
+    this.fetchedXML = true;
     this.onEnd();
   }
 }
@@ -54,6 +58,10 @@ Feed.prototype.start = function(endCallback) {
 Feed.prototype.popFeed = function() {
   this.fetchCount--;
   this.checkIfFinished();
+}
+
+Feed.prototype.stringStatus = function() {
+  return JSON.stringify({ id: this.dbObject.id, fetchCount: this.fetchCount, fetchedXML: this.fetchedXML });
 }
 
 Feed.prototype.onArticle = function(article) {
@@ -125,7 +133,7 @@ Feed.prototype.onArticle = function(article) {
 
 Feed.prototype.checkIfFinished = function() {
   logger.info("Downloads left for feed: "+ this.dbObject.id + " is: "+this.fetchCount);
-  if (this.fetchCount <= 0) {
+  if (this.fetchCount <= 0 && this.fetchedXML) {
     this.onEnd();
   };
 }

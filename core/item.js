@@ -18,7 +18,7 @@ Item.prototype.onFinish = function() {
 Item.prototype.download = function() {
   var _this = this;
   logger.info("Downloading html for page: "+ this.url);
-  request(_this.url, function (error, response, body) {
+  request({ url: _this.url, timeout: Constants.ItemDownloadTimeout * 1000 }, function (error, response, body) {
     if (!error && response.statusCode == 200) {
       readability.parse(body, _this.url, function(result) {
         _this.body = result.content;
@@ -46,7 +46,7 @@ Item.prototype.downloadNextImage = function() {
     logger.info("Downloading image: ", image);
     var fileName = path.join(__dirname, '../data', image.hash+image.ext);
 
-    request({url: image.url, encoding: 'binary'}, function(error, response, content) {
+    request({url: image.url, encoding: 'binary', timeout: Constants.ImageDownloadTimeout * 1000 }, function(error, response, content) {
       if (response != null && Constants.ImageMimeTypes.indexOf(response.headers["content-type"]) > -1) {
         var contentType = response.headers["content-type"];
         var extName     = contentType.split('/')[1];

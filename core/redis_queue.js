@@ -3,7 +3,7 @@ var RedisConstants = require("./constants").RedisConstants;
 var logger         = require('./logger').logger(module);
 function RedisQueue(config) {
   this.redisClient = redis.createClient();
-  this.redisClient.del(RedisConstants.FeedLock);
+  //this.redisClient.del(RedisConstants.FeedLock);
 }
 
 RedisQueue.prototype.lockedFeeds = function(cb) {
@@ -26,10 +26,14 @@ RedisQueue.prototype.addFeedToQueue = function(feedModel) {
 }
 
 RedisQueue.prototype.fetchFeedModelId = function(callback) {
-  this.redisClient.blpop(RedisConstants.FeedLock, 0, function(error, feedModelID) {
-    if (error) {
+  this.redisClient.brpop(RedisConstants.FeedLock, 0, function(error, response) {
+    if (response == true) {
+      callback(false);
+    } else if (error) {
       logger.error("Could not fetch locked feed", error);
-    } else if(feedModelID) {
+      callback(false);
+    } else {
+      var feedModelID = response[1];
       logger.info("Removed from queue feed: "+feedModelID);
       callback(feedModelID);
     }

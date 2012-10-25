@@ -75,7 +75,7 @@ exports.index = function(req, res){
         var image = images[i];
         var image_tag = channels.tag("image");
           image_tag.tag("name").text(image.name).up();
-          image_tag.tag("url").text(image.url).up();
+          image_tag.tag("url").raw('<![CDATA['+image.url+']]>').up();
           image_tag.tag("description").text(image.description).up();
           image_tag.tag("data").raw('<![CDATA[test]]>').up();
         image_tag.up();

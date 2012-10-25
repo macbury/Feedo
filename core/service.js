@@ -19,15 +19,26 @@ function feedFetchHaveFinished(feedParser) {
   logger.info("Removing feed from quee, total parsers: " + RunningFeeds.length);
 }
 
+function nextPopQueue() {
+  //logger.info("Adding next PopQueue request: ", Constants.AskForNewFeeds);
+  setTimeout(getFeedsToSync, Constants.AskForNewFeeds * 1000);
+}
+
 function getFeedsToSync() {
   if (RunningFeeds.length >= Constants.MaxRunningJobsPerWorker) {
     logger.info("There are: " + RunningFeeds.length + " parsers of max on this worker: "+Constants.MaxRunningJobsPerWorker);
+    /*for (var i = 0; i < RunningFeeds.length; i++) {
+      logger.debug(RunningFeeds[i].stringStatus());
+      RunningFeeds[i].checkIfFinished();
+    }*/
+    nextPopQueue();
     return;
   };
 
   redisQueue.fetchFeedModelId(function(modelId) {
     logger.info("Feed id is: "+ modelId)
-    if (modelId == null) {
+    if (!modelId) {
+      nextPopQueue();
       return;
     }
 
@@ -36,6 +47,7 @@ function getFeedsToSync() {
       var feedParser = new Feed(feedModel, dbHelper); 
       RunningFeeds.push(feedParser);
       feedParser.start(feedFetchHaveFinished);
+      nextPopQueue();
     });
   });
 }
@@ -45,7 +57,7 @@ exports.sync = function(dbHelperTemp, config) {
   sender = new gcm.Sender(config.gcm.key);
   redisQueue = new RedisQueue(config.redis);
   dbHelper = dbHelperTemp;
-  setInterval(function(){
-    getFeedsToSync();
-  }, Constants.AskForNewFeeds * 100);
+  getFeedsToSync();
+
+  process.send(Constants.WorkerStatus.Ready);
 }

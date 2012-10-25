@@ -15,15 +15,31 @@ function WorkerManager(config) {
     _this.startWorkers(numCPUs);
   });
 
+  process.on('message', this.onWorkerMessage);
+
   cluster.on('exit', function(worker, code, signal) {
     logger.info('worker ' + worker.process.pid + ' died');
   });
 }
 
+WorkerManager.prototype.onWorkerMessage = function(message) {
+  logger.info("Recived worker message: " + message);
+  if (Constants.WorkerStatus.Ready == message) {
+    this.totalWorkers--;
+
+    if (this.totalWorkers <= 0) {
+      logger.info("Workers finished spawning. Starting refresh queueu");
+      this.waitForFeeds();
+    }
+  }
+}
+
 WorkerManager.prototype.startWorkers = function(num) {
   logger.info("DB synced! Forking workers: ");
+  this.totalWorkers = 0;
   for (var i = 0; i < num; i++) {
     var worker = cluster.fork();
+    this.totalWorkers++;
     logger.info('Staring ' + worker.process.pid);
   }
   this.waitForFeeds();
@@ -40,7 +56,7 @@ WorkerManager.prototype.refreshQueue = function(){
   var _this = this;
   this.redis.lockedFeeds(function(feed_ids) {
     logger.info("Locked feeds: "+ JSON.stringify(feed_ids));
-    if (feed_ids >= Constants.MaxRunningJobs) {
+    if (feed_ids.length >= Constants.MaxRunningJobs) {
       logger.info("Maximum jobs are locked for this machine, skipping...");
       _this.waitForFeeds();
       return;
