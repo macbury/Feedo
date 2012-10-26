@@ -10,6 +10,7 @@ var dbg = (typeof console !== 'undefined') ? function(s) {
 var URL         = require('url');
 var Path        = require('path');
 var crypto      = require('crypto');
+var Item        = require('./item');
 /*
  * Readability. An Arc90 Lab Experiment. 
  * Website: http://lab.arc90.com/experiments/readability
@@ -2204,24 +2205,8 @@ function start(w, options, cb) {
     }
   };
 
-  var images = document.getElementsByTagName("img");
-  var images_url = [];
-
-  //console.log(document.location.host);
-  for(var i = 0; i < images.length; i++) {
-    var image = images[i];
-    var src   = image.src;
-    if (src) {
-      var fullURL = URL.resolve(baseURL, src);
-      dbg('fullURL: '+fullURL);
-      var hash    = crypto.createHash('sha1').update(fullURL).digest("hex");
-      var extName = Path.extname(fullURL).split("?")[0];
-      images_url.push({ url: fullURL, hash: hash, description: image.alt, ext: extName });
-      image.src = hash + extName;
-    }
-    
-  }
-  cb(document.body.innerHTML.toString('utf8').replace('<![CDATA[', '').replace(']]>',''), images_url);
+  var images_url = Item.mapImages(baseURL, document.getElementsByTagName("img"));
+  cb(document.body.innerHTML.toString('utf8'), images_url);
 }
 
 var HTML5;

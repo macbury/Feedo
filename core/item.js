@@ -1,17 +1,53 @@
 var readability = require('./readability');
-var request     = require('request');
 var logger      = require('./logger').logger(module);
-var path        = require('path');
 var Constants   = require("./constants");
+var request     = require('request');
+var path        = require('path');
 var fs          = require("fs");
 var charset     = require('charset');
 var Iconv       = require('iconv').Iconv;
+var HTML5       = require('html5');
+var jsdom       = require('jsdom');
+var URL         = require('url');
+var crypto      = require('crypto');
 
-function Item(url) {
+function Item(url, rss) {
   //console.log(article);
   this.url = url;
+  this.rss = rss;
   this.images_fetched = [];
   this.body = null;
+}
+
+Item.prototype.processRssDescription = function() {
+  logger.info("Item: "+ this.url + " description from readability is shitty, transforming rss description");
+
+  if (this.rss.description == null) {
+    logger.info("Item: "+ this.url + " description of rss is more shitty than website :/");
+    this.onFinish(false);
+    return;
+  };
+
+  var browser = jsdom.browserAugmentation(jsdom.defaultLevel, {
+    url: this.rss.link,
+    features : {
+      FetchExternalResources   : [],
+      ProcessExternalResources : false
+    }
+  });
+  var doc     = new browser.HTMLDocument();
+  var parser  = new HTML5.Parser({document: doc});
+  var baseURL = URL.parse(this.url);
+  baseURL     = baseURL.protocol + baseURL.host;
+  parser.parse(this.rss.description.replace('<![CDATA[', '').replace(']]>',''));
+
+  var win = doc.parentWindow;
+  win = win || doc.createWindow();
+
+  var images = mapImages(baseURL, doc.getElementsByTagName('img'));
+  this.body  = doc.body.innerHTML.toString('utf8');
+
+  this.downloadImages(images);
 }
 
 Item.prototype.onFinish = function() {
@@ -22,7 +58,6 @@ Item.prototype.download = function() {
   var _this = this;
   logger.info("Downloading html for page: "+ this.url);
   request({ url: _this.url, timeout: Constants.ItemDownloadTimeout * 1000, encoding: 'binary' }, function (error, response, body) {
-    logger.info("Page is: "+response.headers["content-type"]);
     if (!error && response.statusCode == 200 && response.headers["content-type"] == "text/html") {
 
       var encoding = charset(response.headers, body);
@@ -38,11 +73,15 @@ Item.prototype.download = function() {
       }
 
       readability.parse(body.toString('utf-8'), _this.url, function(result) {
-        _this.body = result.content;
-        _this.downloadImages(result.images);
+        if (result.content >= _this.rss.description) {
+          _this.body = result.content;
+          _this.downloadImages(result.images);
+        } else {
+          _this.processRssDescription();
+        }
       });
     } else {
-      _this.onFinish(false);
+      _this.processRssDescription();
     }
   });
 }
@@ -86,5 +125,25 @@ Item.prototype.downloadNextImage = function() {
     });
   }
 }
+
+function mapImages(baseURL, images) {
+  var images_url = [];
+  for(var i = 0; i < images.length; i++) {
+    var image = images[i];
+    var src   = image.src;
+    if (src) {
+      var fullURL = URL.resolve(baseURL, src);
+      var hash    = crypto.createHash('sha1').update(fullURL).digest("hex");
+      var extName = path.extname(fullURL).split("?")[0];
+      images_url.push({ url: fullURL, hash: hash, description: image.alt, ext: extName });
+      image.src = hash + extName;
+    }
+    
+  }
+
+  return images_url;
+}
+
+exports.mapImages = mapImages;
 
 exports.Item = Item;

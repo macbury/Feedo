@@ -24,9 +24,12 @@ function Feed(obj, dbHelper) {
     _this.dbObject.title = title;
   });*/
 
-
   this.parser.on("article", function(article) {
     _this.onArticle(article);
+  });
+
+  this.parser.on("error", function(error) {
+    _this.onError(error);
   });
 
   this.parser.on("end", function() {
@@ -34,6 +37,13 @@ function Feed(obj, dbHelper) {
     _this.checkIfFinished();
   });
 
+}
+
+Feed.prototype.onError = function(error) {
+  this.dbObject.errorMessage = JSON.stringify(error);
+  this.broken = true;
+  this.fetchedXML = true;
+  this.onEnd();
 }
 
 Feed.prototype.start = function(endCallback) {
@@ -48,10 +58,7 @@ Feed.prototype.start = function(endCallback) {
     }).pipe(this.parser.stream);
 
   } catch(error) {
-    this.dbObject.errorMessage = JSON.stringify(error);
-    this.broken = true;
-    this.fetchedXML = true;
-    this.onEnd();
+    this.onError(error);
   }
 }
 
@@ -75,18 +82,13 @@ Feed.prototype.onArticle = function(article) {
   }
   this.dbObject.title = article.meta.title;
   
-  var item = new Item(url); 
+  var item = new Item(url, article); 
   item.onFinish = function (success) {
-    var body = item.body;
-    if (body == null || body.length < 60) {
-      body = article.description;
-    }
-
     _this.dbHelper.Item.create({
       url:     url,
       title:   article.title,
       pubDate: article.pubDate,
-      body:    body,
+      body:    item.body,
       FeedId: _this.dbObject.id
     }).complete(function(error, itemModel) {
       if (error) {

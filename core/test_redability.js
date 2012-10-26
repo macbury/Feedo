@@ -7,21 +7,11 @@ var Iconv       = require('iconv').Iconv;
 
 var urlLink = 'http://www.spidersweb.pl/2012/06/jednak-tablety-od-microsoftu-surface-dwoch-wersjach-niezlymi-dodatkami.html';
 
-request({ url: urlLink, encoding: 'binary' }, function (error, response, body) {
-  var encoding = charset(response.headers, body);
-  
-  var bufferHtml = new Buffer(body, 'binary');
+request({ url: urlLink }, function (error, response, body) {
 
-  var html = body.toString();
-  if (encoding != 'utf-8') { //todo sometimes they sending utf8 string as encoding ....
-    console.log("encoding is not utf-8, but it is:" + encoding);
-    var iconv = new Iconv(encoding, 'utf-8');
-    body      = iconv.convert(bufferHtml);
-
-  }
-
-  readability.parse(body.toString(), urlLink, { debug: false }, function(result) {
+  readability.parse(body, urlLink, { debug: true }, function(result) {
     console.log(result.content);
+    console.log(result.images);
   });
 });
 /*
