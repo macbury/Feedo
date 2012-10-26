@@ -1,6 +1,6 @@
 var express = require('express')
   , routes  = require('../routes')
-  , user    = require('../routes/user')
+  , opml    = require('../routes/opml')
   , http    = require('http')
   , path    = require('path');
 var logger  = require('./logger').logger(module);
@@ -45,8 +45,7 @@ app.use(function(err, req, res, next){
 app.use(app.router);
 
 app.get('/api', routes.index);
-app.get('/api/users', user.list);
-
+app.post('/api/import', opml.index);
 // our custom JSON 404 middleware. Since it's placed last
 // it will be the last middleware called, if all others
 // invoke next() and do not respond.

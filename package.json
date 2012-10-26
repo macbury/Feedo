@@ -23,6 +23,7 @@
     "jsdom": "*",
     "gzippo": "git://github.com/macbury/gzippo.git",
     "charset": "*",
-    "iconv": "*"
+    "iconv": "*",
+    "opmlparser": "*"
   }
 }

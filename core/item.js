@@ -22,7 +22,8 @@ Item.prototype.download = function() {
   var _this = this;
   logger.info("Downloading html for page: "+ this.url);
   request({ url: _this.url, timeout: Constants.ItemDownloadTimeout * 1000, encoding: 'binary' }, function (error, response, body) {
-    if (!error && response.statusCode == 200) {
+    logger.info("Page is: "+response.headers["content-type"]);
+    if (!error && response.statusCode == 200 && response.headers["content-type"] == "text/html") {
 
       var encoding = charset(response.headers, body);
       var bufferHtml = new Buffer(body, 'binary');
