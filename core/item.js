@@ -73,7 +73,7 @@ Item.prototype.download = function() {
       }
 
       readability.parse(body.toString('utf-8'), _this.url, function(result) {
-        if (result.content >= _this.rss.description) {
+        if (_this.rss.description == null || result.content.toString().length >= _this.rss.description.toString().length) {
           _this.body = result.content;
           _this.downloadImages(result.images);
         } else {
