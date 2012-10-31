@@ -112,7 +112,7 @@ Item.prototype.downloadNextImage = function() {
         } catch (error) {
           logger.error("could not download image: ", error);
           _this.downloadNextImage();
-            return;
+          return;
         }
         logger.info("Saving file in: "+ fileName);
         fs.writeFile(fileName, buffer.toString('base64'), function(err) {
@@ -122,7 +122,7 @@ Item.prototype.downloadNextImage = function() {
             image["mimeType"] = contentType;
             _this.images_fetched.push(image);
           }
-          _this.downloadNextImage();
+          _this.downloadNextImage(); //todo implement process.nextTick for this
         });
       } else {
         logger.error("invalid response: " + JSON.stringify(response), image);
