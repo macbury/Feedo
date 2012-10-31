@@ -103,11 +103,17 @@ Item.prototype.downloadNextImage = function() {
     var fileName = path.join(__dirname, '../data', image.hash+image.ext);
 
     request({url: image.url, encoding: 'binary', timeout: Constants.ImageDownloadTimeout * 1000 }, function(error, response, content) {
-      if (response != null && Constants.ImageMimeTypes.indexOf(response.headers["content-type"]) > -1) {
+      if (response != null && response.statusCode == 200) {
         var contentType = response.headers["content-type"];
         var extName     = contentType.split('/')[1];
-        var buffer      = new Buffer(content, 'binary');
-       
+        var buffer      = null;
+        try {
+          buffer = new Buffer(content, 'binary');
+        } catch (error) {
+          logger.error("could not download image: ", error);
+          _this.downloadNextImage();
+            return;
+        }
         logger.info("Saving file in: "+ fileName);
         fs.writeFile(fileName, buffer.toString('base64'), function(err) {
           if (err) {
@@ -119,7 +125,7 @@ Item.prototype.downloadNextImage = function() {
           _this.downloadNextImage();
         });
       } else {
-        logger.error("invalid mime type: " + contentType, image);
+        logger.error("invalid response: " + JSON.stringify(response), image);
         _this.downloadNextImage();
       }
     });
