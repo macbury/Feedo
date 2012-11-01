@@ -94,6 +94,13 @@ Item.prototype.downloadImages = function(images) {
 }
 
 Item.prototype.downloadNextImage = function() {
+  var _this = this;
+  process.nextTick(function(){
+    _this.asyncDownloadNextImage();
+  });
+}
+
+Item.prototype.asyncDownloadNextImage = function() {
   var image = this.images_to_download.shift();
   var _this = this;
   if (image == null) {
