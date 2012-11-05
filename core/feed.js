@@ -5,7 +5,8 @@ var logger         = require('./logger').logger(module);
 var Constants      = require("./constants");
 var RedisConstants = Constants.RedisConstants;
 var Sequelize      = require('sequelize');
-
+var charset        = require('charset');
+var Iconv          = require('iconv').Iconv;
 require('date-utils');
 
 function Feed(obj, dbHelper) {
@@ -50,12 +51,28 @@ Feed.prototype.start = function(endCallback) {
   this.endCallback = endCallback;
   var _this   = this;
   try {
-    request(this.dbObject.url, { followAllRedirects: true, timeout: Constants.FeedDownloadTimeout * 1000 }).on("error", function(error){
-      _this.dbObject.errorMessage = JSON.stringify(error);
-      _this.broken = true;
-      _this.fetchedXML = true;
-      _this.checkIfFinished();
-    }).pipe(this.parser.stream);
+    request(this.dbObject.url, { followAllRedirects: true, timeout: Constants.FeedDownloadTimeout * 1000, encoding: 'binary' }, function (error, response, body) {
+      if (error) {
+        _this.dbObject.errorMessage = JSON.stringify(error);
+        _this.broken = true;
+        _this.fetchedXML = true;
+        _this.checkIfFinished();
+      } else {
+        var encoding = charset(response.headers, body);
+        var bufferHtml = new Buffer(body, 'binary');
+
+        if (encoding && !encoding.match(/utf/)) {
+          logger.info("encoding is not utf-8, but it is:" + encoding);
+
+          var iconv = new Iconv(encoding, 'utf-8');
+          body      = iconv.convert(bufferHtml);
+        } else {
+          body      = bufferHtml;
+        }
+        _this.parser.parseString(body);  
+      }
+      
+    });
 
   } catch(error) {
     this.onError(error);
@@ -83,12 +100,14 @@ Feed.prototype.onArticle = function(article) {
   this.dbObject.title = article.meta.title;
   
   var item = new Item(url, article); 
+  item.dbHelper = this.dbHelper;
   item.onFinish = function (success) {
     _this.dbHelper.Item.create({
       url:     url,
       title:   article.title,
       pubDate: article.pubDate,
       body:    item.body,
+      hash:    item.hash,
       FeedId: _this.dbObject.id
     }).complete(function(error, itemModel) {
       if (error) {

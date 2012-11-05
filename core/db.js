@@ -47,6 +47,7 @@ DatabaseHelper.prototype.buildItem = function() {
     title: { type: Sequelize.STRING, allowNull: false },
     pubDate: { type: Sequelize.DATE, defaultValue: Sequelize.NOW },
     body: { type: Sequelize.TEXT },
+    hash: { type: Sequelize.STRING, allowNull: false }
   },{});
   this.Feed.hasMany(this.Item);
   this.Item.belongsTo(this.Feed);
