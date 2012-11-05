@@ -1,6 +1,6 @@
 
 var RedisConstants = {
-  FeedLock: "feedoo:pendings"
+  FeedLock: "feedoo:pendings:feeds"
 }
 
 exports.WorkerStatus = {

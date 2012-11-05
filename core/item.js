@@ -23,6 +23,7 @@ Item.prototype.processRssDescription = function() {
   logger.info("Item: "+ this.url + " description from readability is shitty, transforming rss description");
 
   if (this.rss.description == null) {
+    this.hash = crypto.createHash('sha1').update(this.url).digest("hex");
     logger.info("Item: "+ this.url + " description of rss is more shitty than website :/");
     this.onFinish(false);
     return;
@@ -47,12 +48,32 @@ Item.prototype.processRssDescription = function() {
   var images = mapImages(baseURL, doc.getElementsByTagName('img'));
   this.body  = doc.body.innerHTML.toString('utf8');
 
+  this.hash = crypto.createHash('sha1').update(this.body).digest("hex");
   this.downloadImages(images);
 }
 
 Item.prototype.onFinish = function() {
 
 }
+
+Item.prototype.analyzeRedabilityResult = function(result) {
+  if (this.rss.description == null || result.content.toString().length >= this.rss.description.toString().length) {
+    this.hash = crypto.createHash('sha1').update(result.content).digest("hex");
+    var _this = this;
+    this.dbHelper.Item.count({ where: { hash: this.hash } }).complete(function(error, count) {
+      if (count == 0) {
+        _this.body = result.content;
+        _this.downloadImages(result.images);
+      } else {
+        logger.info("Found similary item in db for item description, using rss description");
+        _this.processRssDescription();
+      }
+    });
+    
+  } else {
+    this.processRssDescription();
+  }
+} 
 
 Item.prototype.download = function() {
   var _this = this;
@@ -73,12 +94,7 @@ Item.prototype.download = function() {
       }
 
       readability.parse(body.toString('utf-8'), _this.url, function(result) {
-        if (_this.rss.description == null || result.content.toString().length >= _this.rss.description.toString().length) {
-          _this.body = result.content;
-          _this.downloadImages(result.images);
-        } else {
-          _this.processRssDescription();
-        }
+        _this.analyzeRedabilityResult(result);
       });
     } else {
       _this.processRssDescription();
