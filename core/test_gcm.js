@@ -11,5 +11,13 @@ message.collapseKey = 'demo';
 //message.delayWhileIdle = true;
 
 sender.send(message, registrationIds, 4, function (result) {
-  console.log(result);
+  //console.log(result);
+});
+
+var a = ["https://github.com/mikeal/request", "http://www.obserwatorfinansowy.pl/forma/debata/poprzez-celowa-inflacje-rzady-pozbywaja-sie-dlugu/", "http://antyweb.pl/instagram-prawie-jak-facebook-profile-i-zdjecia-w-wersji-webowej/"];
+
+var request        = require('request');
+request('http://graph.facebook.com?ids='+ a.join(","), {}, function (error, response, body) {
+  var body = JSON.parse(body);
+  console.log(body);
 });

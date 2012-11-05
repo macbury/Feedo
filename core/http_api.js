@@ -33,9 +33,16 @@ app.use('/api', function(req, res, next){
   var key = req.query['api-key'];
 
   if (!key) return next(error(400, 'api key required'));
-  if (!~apiKeys.indexOf(key)) return next(error(401, 'invalid api key'));
-  req.key = key;
-  next();
+  var db   = req.app.get('dbHelper');
+
+  db.ApiKey.find({ where: { key: key } }).success(function(apiKey) {
+    if (apiKey == null) {
+      next(error(401, 'invalid api key'));
+    } else {
+      req.key = key;
+      next();
+    }
+  });
 });
 
 app.use(function(err, req, res, next){

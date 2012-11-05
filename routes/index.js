@@ -103,7 +103,7 @@ FeedSyncResponseBuilder.prototype.addNextImage = function() {
         logger.error("Could not load file", err); 
       }
 
-      var image_tag = _this.images_tag.tag("image");
+      var image_tag = _this.images_tag.tag("image", { uid: image.ItemId.toString() });
         image_tag.tag("name").text(image.name).up();
         image_tag.tag("url").raw('<![CDATA['+image.url+']]>').up();
         image_tag.tag("description").text(image.description).up();

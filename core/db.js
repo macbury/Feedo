@@ -18,6 +18,14 @@ function DatabaseHelper(config) {
   this.buildImage();
   this.buildFeed();
   this.buildItem();
+  this.buildApiKey();
+}
+
+DatabaseHelper.prototype.buildApiKey = function() {
+  this.ApiKey = this.db.define('ApiKey', {
+    name:        { type: Sequelize.STRING, allowNull: false },
+    key:         { type: Sequelize.STRING, allowNull: false },
+  },{});
 }
 
 DatabaseHelper.prototype.buildImage = function() {
@@ -60,6 +68,7 @@ DatabaseHelper.prototype.sync = function() {
   chainer.add(this.Feed.sync());
   chainer.add(this.Image.sync());
   chainer.add(this.Item.sync());
+  chainer.add(this.ApiKey.sync());
   return chainer;
 }
 

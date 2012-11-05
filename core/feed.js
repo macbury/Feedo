@@ -99,7 +99,7 @@ Feed.prototype.onArticle = function(article) {
   }
   this.dbObject.title = article.meta.title;
   
-  var item = new Item(url, article); 
+  var item      = new Item(url, article); 
   item.dbHelper = this.dbHelper;
   item.onFinish = function (success) {
     _this.dbHelper.Item.create({
