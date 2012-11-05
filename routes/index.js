@@ -4,7 +4,7 @@ var fs        = require('fs');
 var logger    = require('../core/logger').logger(module);
 var path      = require('path');
 function FeedSyncResponseBuilder(req, res) {
-  this.xml  = new asyncxml.Builder({pretty:true});
+  this.xml  = new asyncxml.Builder({pretty:false});
   this.db   = req.app.get('dbHelper');
   this.res  = res;
   this.req  = req;
@@ -34,11 +34,16 @@ FeedSyncResponseBuilder.prototype.addNextChannel = function() {
   var channel = this.channels.shift();
   if (channel) {
     var channel_tag = this.channels_tag.tag("channel");
-      channel_tag.tag("uid").text(channel.id).up();
+      channel_tag.tag("uid").text(channel.id.toString()).up();
       channel_tag.tag("title").text(channel.title.toString(), { escape: true }).up();
       channel_tag.tag("url").text(channel.url.toString(), { escape: true }).up();
     channel_tag.up();
-    this.addNextChannel();
+
+    var _this = this;
+    process.nextTick(function() {
+      _this.addNextChannel();
+    });
+    
   } else {
     this.channels_tag.up();
     this.buildItemsXML();
@@ -59,13 +64,18 @@ FeedSyncResponseBuilder.prototype.addNextItem = function() {
   var item = this.items.pop();
   if (item) {
     var item_tag = this.items_tag.tag("item");
-      item_tag.tag("uid", item.id).up();
+      item_tag.tag("uid", item.id.toString()).up();
       item_tag.tag("title").text(item.title, { escape: true }).up();
       item_tag.tag("url").text(item.url, { escape: true }).up();
       //channel.tag("pubDate").text(feed.pubDate.toString(), { escape: true }).up();
+      logger.debug(JSON.stringify(item.body));
       item_tag.tag("content").raw('<![CDATA['+item.body+']]>').up();
     item_tag.up();
-    this.addNextItem();
+
+    var _this = this;
+    process.nextTick(function() {
+      _this.addNextItem();
+    });
   } else {
     this.items_tag.up();
     this.buildImagesXML();
@@ -101,7 +111,9 @@ FeedSyncResponseBuilder.prototype.addNextImage = function() {
         image_tag.tag("data").raw('<![CDATA['+data+']]>').up();
       image_tag.up();
 
-      _this.addNextImage();
+      process.nextTick(function() {
+        _this.addNextImage();
+      });
     });
 
   } else {

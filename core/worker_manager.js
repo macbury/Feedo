@@ -44,10 +44,15 @@ WorkerManager.prototype.startWorkers = function(num) {
   for (var i = 0; i < num; i++) {
     var worker = cluster.fork();
     worker.on('message', function(message) { _this.onWorkerMessage(message); });
+    worker.on('uncaughtException', function(err) {
+      logger.error("Worker fatal exception", err);
+    });
     this.totalWorkers++;
     logger.info('Staring ' + worker.process.pid);
   }
 }
+
+
 
 WorkerManager.prototype.waitForFeeds = function() {
   var _this = this;
