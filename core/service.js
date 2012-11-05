@@ -17,6 +17,19 @@ function feedFetchHaveFinished(feedParser) {
   }
 
   logger.info("Removing feed from quee, total parsers: " + RunningFeeds.length);
+
+  if (feedParser.newItems) {
+    logger.info("New items for feed");
+    var message = new gcm.Message();
+    var registrationIds = ["APA91bFcEilK6PjWMEAIHPiAsJ7_ekQR08rtV5ju1qWkLu4H6_H_so5DxNalxYy0TZFVimfTfnd7hobGb9HB6CEroYi9q2pU5moZLHmIufOF5szZdfRp3EEzt1RU0Ibp1s1mj3bGX2nOecGNkLkQ39uvOmPIULl_jQ"];
+    
+    message.addData('action','refresh');
+    message.collapseKey = 'refresh';
+
+    sender.send(message, registrationIds, 4, function (result) {
+      logger.info(result);
+    });
+  }
 }
 
 function nextPopQueue() {
@@ -54,7 +67,7 @@ function getFeedsToSync() {
 
 exports.sync = function(dbHelperTemp, config) {
   logger.info('Staring sync, This process is pid ' + process.pid);
-  sender = new gcm.Sender(config.gcm.key);
+  sender = new gcm.Sender(config.gcm.api_key);
   redisQueue = new RedisQueue(config.redis);
   dbHelper = dbHelperTemp;
   getFeedsToSync();

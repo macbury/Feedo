@@ -52,7 +52,7 @@ FeedSyncResponseBuilder.prototype.addNextChannel = function() {
 
 FeedSyncResponseBuilder.prototype.buildItemsXML = function() {
   var _this = this;
-  this.db.Item.findAll().success(function(items) {
+  this.db.Item.findAll({ order: "createdAt DESC" }).success(function(items) {
     logger.info("Fetched items count: ", items.length);
     _this.items     = items;
     _this.items_tag = _this.root.tag("items");
@@ -63,12 +63,11 @@ FeedSyncResponseBuilder.prototype.buildItemsXML = function() {
 FeedSyncResponseBuilder.prototype.addNextItem = function() {
   var item = this.items.pop();
   if (item) {
-    var item_tag = this.items_tag.tag("item");
-      item_tag.tag("uid", item.id.toString()).up();
+    var item_tag = this.items_tag.tag("item", { uid: item.id.toString() });
+      item_tag.tag("feed-uid", item.FeedId.toString()).up();
       item_tag.tag("title").text(item.title, { escape: true }).up();
       item_tag.tag("url").text(item.url, { escape: true }).up();
       //channel.tag("pubDate").text(feed.pubDate.toString(), { escape: true }).up();
-      logger.debug(JSON.stringify(item.body));
       item_tag.tag("content").raw('<![CDATA['+item.body+']]>').up();
     item_tag.up();
 
@@ -121,46 +120,5 @@ FeedSyncResponseBuilder.prototype.addNextImage = function() {
     this.root.up().end();
   }
 }
-
-//
-/*
-
-  db.Item.findAll().success(function(feeds) {
-    var channels = root.tag("articles");
-
-    for (var i = 0; i < feeds.length; i++) {
-      var feed = feeds[i];
-      var channel = channels.tag("article");
-        channel.tag("uid", feed.id).up();
-        channel.tag("title").text(feed.title, { escape: true }).up();
-        channel.tag("url").text(feed.url, { escape: true }).up();
-        //channel.tag("pubDate").text(feed.pubDate.toString(), { escape: true }).up();
-        channel.tag("content").raw('<![CDATA['+feed.body+']]>').up();
-      channel.up();
-    };
-
-    channels.up();
-
-    var images_tag = root.tag("images");
-    db.Image.findAll().complete(function(error, images) {
-
-      for (var i = 0; i < images.length; i++) {
-        var image = images[i];
-        var image_tag = channels.tag("image");
-          image_tag.tag("name").text(image.name).up();
-          image_tag.tag("url").raw('<![CDATA['+image.url+']]>').up();
-          image_tag.tag("description").text(image.description).up();
-          image_tag.tag("data").raw('<![CDATA[test]]>').up();
-        image_tag.up();
-      };
-
-      images_tag.up();
-      root.up().end();
-    });
-    
-  }).error(function(){
-    root.up().end();
-  });
-*/
 
 exports.index = function(req, res){ new FeedSyncResponseBuilder(req, res); }

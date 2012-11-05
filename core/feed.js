@@ -135,7 +135,7 @@ Feed.prototype.onArticle = function(article) {
 
 Feed.prototype.checkIfFinished = function() {
   logger.info("Downloads left for feed: "+ this.dbObject.id + " is: "+this.fetchCount);
-  if (this.fetchCount <= 0 && this.fetchedXML) {
+  if (this.fetchCount <= 0) {
     this.onEnd();
   };
 }
