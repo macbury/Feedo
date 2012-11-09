@@ -105,9 +105,11 @@ FeedSyncResponseBuilder.prototype.addNextImage = function() {
 
       var image_tag = _this.images_tag.tag("image", { uid: image.ItemId.toString() });
         image_tag.tag("name").text(image.name).up();
+        image_tag.tag("width").raw(image.width.toString()).up();
+        image_tag.tag("height").raw(image.height.toString()).up();
         image_tag.tag("url").raw('<![CDATA['+image.url+']]>').up();
         image_tag.tag("description").text(image.description).up();
-        image_tag.tag("data").raw('<![CDATA['+data+']]>').up();
+        image_tag.tag("data", { as: "base64", mimeType: image.mimeType.toString() }).raw('<![CDATA['+data+']]>').up();
       image_tag.up();
 
       process.nextTick(function() {

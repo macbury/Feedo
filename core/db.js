@@ -18,7 +18,19 @@ function DatabaseHelper(config) {
   this.buildImage();
   this.buildFeed();
   this.buildItem();
+  this.buildUser();
   this.buildApiKey();
+}
+
+DatabaseHelper.prototype.buildUser = function() {
+  this.User = this.db.define('User', {
+    email:      { type: Sequelize.STRING, allowNull: false },
+    googleId:   { type: Sequelize.STRING, allowNull: false }
+  },{});
+  
+  this.Token = this.db.define('Token', {
+    hash:      { type: Sequelize.STRING, allowNull: false }
+  },{});
 }
 
 DatabaseHelper.prototype.buildApiKey = function() {
@@ -34,6 +46,8 @@ DatabaseHelper.prototype.buildImage = function() {
     description: { type: Sequelize.TEXT },
     url:         { type: Sequelize.STRING, allowNull: false },
     mimeType:    { type: Sequelize.STRING, allowNull: false },
+    width:       { type: Sequelize.INTEGER, allowNull: false },
+    height:      { type: Sequelize.INTEGER, allowNull: false }
   },{});
 }
 
@@ -61,10 +75,14 @@ DatabaseHelper.prototype.buildItem = function() {
   this.Item.belongsTo(this.Feed);
   this.Item.hasMany(this.Image);
   this.Image.belongsTo(this.Item);
+  this.User.hasMany(this.Feeds, { as: 'Subscriptions' });
+  this.User.hasMany(this.Token);
+  this.Feeds.hasMany(this.User, { as: 'Subscriptions' });
 }
 
 DatabaseHelper.prototype.sync = function() {
   var chainer = new Sequelize.Utils.QueryChainer();
+  chainer.add(this.User.sync());
   chainer.add(this.Feed.sync());
   chainer.add(this.Image.sync());
   chainer.add(this.Item.sync());

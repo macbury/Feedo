@@ -24,6 +24,8 @@
     "gzippo": "git://github.com/macbury/gzippo.git",
     "charset": "*",
     "iconv": "*",
-    "opmlparser": "*"
+    "opmlparser": "*",
+    "canvas": "*",
+    "jsonxml":"*"
   }
 }
