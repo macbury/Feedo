@@ -52,8 +52,8 @@ var userRequired = function(req, res, next){
     if (user == null) {
       res.send(401, jsonxml({ error: 'token is invalid' }));
     } else {
-      res.locals.token = token;
-      res.locals.user  = user;
+      res.locals.token  = token;
+      req.user  = function() { return user };
       next();
     }
   });
