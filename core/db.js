@@ -11,7 +11,7 @@ function DatabaseHelper(config) {
     dialect: 'mysql',
     define: { timestamps: true },
     sync: { force: true },
-    pool: { maxConnections: 5, maxIdleTime: 30}
+    pool: { maxConnections: 5, maxIdleTime: 60}
   });
 
   logger.info("Appending schema");

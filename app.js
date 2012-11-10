@@ -16,6 +16,9 @@ if (cluster.isMaster) {
   var manager = new WorkerManager(CONFIG);
 } else {
   var dbHelper = new DatabaseHelper(CONFIG.db);
-  service.sync(dbHelper, CONFIG);
-  app.startHttpServer(CONFIG, dbHelper);
+  dbHelper.sync().run().success(function(){
+    service.sync(dbHelper, CONFIG);
+    app.startHttpServer(CONFIG, dbHelper);
+  });
+
 }
