@@ -5,7 +5,7 @@ var RedisQueue      = require('./redis_queue').RedisQueue;
 var Constants       = require("./constants");
 var RedisConstants  = require("./constants").RedisConstants;
 var logger          = require('./logger').logger(module);
-
+var repl            = require("repl");
 function WorkerManager(config) {
   var _this       = this;
   this.dbHelper   = new DatabaseHelper(config.db);
@@ -13,11 +13,7 @@ function WorkerManager(config) {
   this.maxWorkers = numCPUs;
 
   this.dbHelper.sync().run().success(function(){
-    repl.start({
-      prompt: "node via stdin> ",
-      input: process.stdin,
-      output: process.stdout
-    });
+    _this.asRepl();
     _this.startWorkers(_this.maxWorkers);
   });
 
@@ -30,6 +26,18 @@ function WorkerManager(config) {
   });
 }
 
+WorkerManager.prototype.asRepl = function() {
+  var c = repl.start({
+    prompt: "feedo> ",
+    input: process.stdin,
+    output: process.stdout,
+    useGlobal: false
+  });
+
+  c.context.m  = 'test';
+  c.context.db = this.dbHelper;
+}
+
 WorkerManager.prototype.onWorkerMessage = function(message) {
   logger.info("Recived worker message: " + message);
   if (Constants.WorkerStatus.Ready == message) {
@@ -37,7 +45,7 @@ WorkerManager.prototype.onWorkerMessage = function(message) {
     logger.info("Workers left: ", this.totalWorkers);
     if (this.totalWorkers <= 0) {
       logger.info("Workers finished spawning. Starting refresh queueu");
-      //this.waitForFeeds(); TODO Remove this comment 
+      this.waitForFeeds(); //TODO Remove this comment 
     }
   }
 }

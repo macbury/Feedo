@@ -14,19 +14,6 @@ function DatabaseHelper(config) {
     pool: { maxConnections: 5, maxIdleTime: 30}
   });
 
-  this.db.on('error', function(err) {
-    if (!err.fatal) {
-      return;
-    }
-
-    if (err.code !== 'PROTOCOL_CONNECTION_LOST') {
-      throw err;
-    }
-
-    logger.error('Re-connecting lost connection: ' + err.stack);
-
-  });
-
   logger.info("Appending schema");
   this.buildUser();
   this.buildImage();

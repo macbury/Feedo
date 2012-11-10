@@ -1,5 +1,5 @@
 var util = require('util'),
-  fs = require('fs');
+      fs = require('fs');
 var path = require('path');
 
 function padZero(number) {
@@ -66,8 +66,9 @@ function getMessage(items) {
 var config = {};
 
 var defaultLogLevel = 'trace';
-var logLevels = config.level || {};
-var useColor = config.color || (config.color == 'auto' && process.env.TERM && process.env.TERM.indexOf('color') >= 0);
+var logLevels       = config.level || {};
+var useColor        = config.color || (config.color == 'auto' && process.env.TERM && process.env.TERM.indexOf('color') >= 0);
+var logFile         = fs.createWriteStream(__dirname+'/../log/shit.log', {'flags': 'a'});
 
 exports.logger = function(module) {
   var methods = {
@@ -88,7 +89,7 @@ exports.logger = function(module) {
     if (levelStr.length == 4) levelStr += ' ';
     logger[level] = function(msg) {
       if (methods[level].priority >= priority) {
-        //util.puts('\x1B[' + methods[level].color + 'm' + 'pid: ' + process.pid +' '+ getDate() + ' ' + levelStr + ' ' + path.basename(getClass(module)) +':' + getLine() + ' - ' + getMessage(arguments) + '\x1B[0m');
+        logFile.write('\x1B[' + methods[level].color + 'm' + 'pid: ' + process.pid +' '+ getDate() + ' ' + levelStr + ' ' + path.basename(getClass(module)) +':' + getLine() + ' - ' + getMessage(arguments) + '\x1B[0m\n');
       }
     };
   }
