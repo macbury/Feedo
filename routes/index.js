@@ -10,9 +10,7 @@ function FeedSyncResponseBuilder(req, res) {
   this.res  = res;
   this.req  = req;
 
-  this.currentUser = req.user;
-  console.log("User inside request");
-  console.log(req.user);
+  this.currentUser = req.locals.user;
 
   this.prepareResponse();
   this.root = this.xml.tag("feeds", { version:"0.1" });

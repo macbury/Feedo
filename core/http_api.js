@@ -54,8 +54,6 @@ var userRequired = function(req, res, next){
     } else {
       res.locals.token  = token;
       res.locals.user   = user;
-      console.log("User validation");
-      console.log(user);
       next();
     }
   });
