@@ -7,11 +7,12 @@ var RedisConstants = Constants.RedisConstants;
 var Sequelize      = require('sequelize');
 var charset        = require('charset');
 var Iconv          = require('iconv').Iconv;
+
 require('date-utils');
 
 function Feed(obj, dbHelper) {
   this.dbObject = obj;
-  logger.info("New feed parser for: "+this.dbObject.id)
+  logger.info("New feed parser for: "+this.dbObject.url);
   this.broken = false;
   this.fetchCount  = 0;
   this.parser = new FeedParser();
@@ -88,6 +89,44 @@ Feed.prototype.stringStatus = function() {
   return JSON.stringify({ id: this.dbObject.id, fetchCount: this.fetchCount, fetchedXML: this.fetchedXML });
 }
 
+Feed.prototype.insertArticleToDB = function(article, item) {
+  var _this = this;
+  this.dbHelper.Item.create({
+    url:     article.link,
+    title:   article.title,
+    pubDate: article.pubDate,
+    body:    item.body,
+    hash:    item.hash,
+    FeedId: _this.dbObject.id
+  }).complete(function(error, itemModel) {
+    if (error) {
+      logger.error(error);
+      _this.popFeed();
+    } else {
+      var chainer = new Sequelize.Utils.QueryChainer();
+      for (var i = 0; i < item.images_fetched.length; i++) {
+        var image = item.images_fetched[i];
+        chainer.add(_this.dbHelper.Image.create({
+          ItemId: itemModel.id,
+          url: image.url,
+          name: image.hash+image.ext,
+          mimeType: image.mimeType,
+          width: image.width,
+          height: image.height,
+          description: image.description
+        }));
+      }
+
+      chainer.run().complete(function(error, im) {
+        if (error) {
+          logger.error(error);
+        }
+        _this.popFeed();
+      });
+    }
+  });
+}
+
 Feed.prototype.onArticle = function(article) {
   var _this = this;
 
@@ -101,42 +140,9 @@ Feed.prototype.onArticle = function(article) {
   
   var item      = new Item(url, article); 
   item.dbHelper = this.dbHelper;
-  item.onFinish = function (success) {
-    _this.dbHelper.Item.create({
-      url:     url,
-      title:   article.title,
-      pubDate: article.pubDate,
-      body:    item.body,
-      hash:    item.hash,
-      FeedId: _this.dbObject.id
-    }).complete(function(error, itemModel) {
-      if (error) {
-        logger.error(error);
-        _this.popFeed();
-      } else {
-        var chainer = new Sequelize.Utils.QueryChainer();
-        for (var i = 0; i < item.images_fetched.length; i++) {
-          var image = item.images_fetched[i];
-          chainer.add(_this.dbHelper.Image.create({
-            ItemId: itemModel.id,
-            url: image.url,
-            name: image.hash+image.ext,
-            mimeType: image.mimeType,
-            description: image.description
-          }));
-        }
-
-        chainer.run().complete(function(error, im) {
-          if (error) {
-            logger.error(error);
-          }
-          _this.popFeed();
-        });
-      }
-    });
-  }
-
-  this.dbObject.getItems({ where: { url: url } }).success(function(items){
+  item.onFinish = function (success) { _this.insertArticleToDB(article, item); };
+  
+  this.dbHelper.Item.findAll({ where: { url: url, FeedId: this.dbObject.id } }).success(function(items){
     if (items == null || items.length == 0) {
       logger.info("New article to download :"+ url);
       _this.fetchCount++;

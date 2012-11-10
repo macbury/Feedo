@@ -5,7 +5,7 @@ var express = require('express')
   , path    = require('path');
 var logger  = require('./logger').logger(module);
 var gzippo  = require('gzippo');
-
+var jsonxml = require('jsontoxml');
 var app     = express();
 
 app.configure(function(){
@@ -27,35 +27,49 @@ function error(status, msg) {
   return err;
 }
 
-var apiKeys = ['test'];
-
-app.use('/api', function(req, res, next){
-  var key = req.query['api-key'];
-
-  if (!key) return next(error(400, 'api key required'));
+var apiKeyRequired = function(req, res, next){
+  var key = req.param('api-key');
+  logger.info("Validating api key:", key);
+  if (!key) return res.send(400, jsonxml({ error: 'api key is empty' }));
   var db   = req.app.get('dbHelper');
 
   db.ApiKey.find({ where: { key: key } }).success(function(apiKey) {
     if (apiKey == null) {
-      next(error(401, 'invalid api key'));
+      res.send(401, jsonxml({ error: 'invalid api key' }));
     } else {
       req.key = key;
       next();
     }
   });
-});
+}
+
+var userRequired = function(req, res, next){
+  var key = req.param('token');
+  logger.info("Validating token:", key);
+  if (!key) return res.send(400, jsonxml({ error: 'token is required' }));
+  
+  req.app.get('dbHelper').userByToken(key, function(error, user) {
+    if (user == null) {
+      res.send(401, jsonxml({ error: 'token is invalid' }));
+    } else {
+      req.user = user;
+      next();
+    }
+  });
+}
 
 app.use(function(err, req, res, next){
-  res.send(err.status || 500, { error: err.message });
+  res.send(err.status || 500, jsonxml({ error: err.message }));
 });
 
 app.use(app.router);
 
-app.get('/api', routes.index);
-app.post('/api/import', opml.index);
-// our custom JSON 404 middleware. Since it's placed last
-// it will be the last middleware called, if all others
-// invoke next() and do not respond.
+var users = require("../routes/user");
+
+app.post('/api/auth', apiKeyRequired, users.auth);
+app.get('/api/my/stream', [apiKeyRequired, userRequired], routes.index);
+app.get('/api/my/gcm', users.gcm);
+
 app.use(function(req, res){
   res.send(404, { error: "Lame, can't find that" });
 });

@@ -10,7 +10,8 @@ var HTML5       = require('html5');
 var jsdom       = require('jsdom');
 var URL         = require('url');
 var crypto      = require('crypto');
-
+var Canvas      = require('canvas');
+var Image       = Canvas.Image;
 function Item(url, rss) {
   //console.log(article);
   this.url = url;
@@ -137,15 +138,22 @@ Item.prototype.asyncDownloadNextImage = function() {
           _this.downloadNextImage();
           return;
         }
+
+        logger.info("Analyzing image: "+ image.url);
+        var img = new Image;
+        img.src = buffer;
+
         logger.info("Saving file in: "+ fileName);
         fs.writeFile(fileName, buffer.toString('base64'), function(err) {
           if (err) {
             logger.error("Could not download: ", { error: err, image: image });
           } else {
             image["mimeType"] = contentType;
+            image["width"]    = img.width;
+            image["height"]   = img.height;
             _this.images_fetched.push(image);
           }
-          _this.downloadNextImage(); //todo implement process.nextTick for this
+          _this.downloadNextImage();
         });
       } else {
         logger.error("invalid response: " + JSON.stringify(response), image);
