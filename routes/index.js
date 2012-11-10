@@ -73,7 +73,7 @@ FeedSyncResponseBuilder.prototype.addNextItem = function() {
       item_tag.tag("feed-uid", item.FeedId.toString()).up();
       item_tag.tag("title").text(item.title, { escape: true }).up();
       item_tag.tag("url").text(item.url, { escape: true }).up();
-      //channel.tag("pubDate").text(feed.pubDate.toString(), { escape: true }).up();
+      channel.tag("pubDate").text(feed.createdAt.toString(), { escape: true }).up();
       item_tag.tag("content").raw('<![CDATA['+item.body+']]>').up();
     item_tag.up();
 
