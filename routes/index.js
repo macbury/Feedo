@@ -11,7 +11,7 @@ function FeedSyncResponseBuilder(req, res) {
   this.req  = req;
 
   this.currentUser = res.locals.user;
-
+  console.log(res.locals);
   this.prepareResponse();
   this.root = this.xml.tag("feeds", { version:"0.1" });
   this.buildChannelsXML();
