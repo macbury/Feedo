@@ -37,7 +37,7 @@ var apiKeyRequired = function(req, res, next){
     if (apiKey == null) {
       res.send(401, jsonxml({ error: 'invalid api key' }));
     } else {
-      req.key = key;
+      res.locals.key = apiKey;
       next();
     }
   });
@@ -52,8 +52,8 @@ var userRequired = function(req, res, next){
     if (user == null) {
       res.send(401, jsonxml({ error: 'token is invalid' }));
     } else {
-      req.token = token;
-      req.user  = user;
+      res.locals.token = token;
+      res.locals.user  = user;
       next();
     }
   });
