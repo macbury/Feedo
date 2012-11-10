@@ -13,6 +13,11 @@ function WorkerManager(config) {
   this.maxWorkers = numCPUs;
 
   this.dbHelper.sync().run().success(function(){
+    repl.start({
+      prompt: "node via stdin> ",
+      input: process.stdin,
+      output: process.stdout
+    });
     _this.startWorkers(_this.maxWorkers);
   });
 

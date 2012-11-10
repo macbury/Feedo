@@ -88,7 +88,7 @@ exports.logger = function(module) {
     if (levelStr.length == 4) levelStr += ' ';
     logger[level] = function(msg) {
       if (methods[level].priority >= priority) {
-        util.puts('\x1B[' + methods[level].color + 'm' + 'pid: ' + process.pid +' '+ getDate() + ' ' + levelStr + ' ' + path.basename(getClass(module)) +':' + getLine() + ' - ' + getMessage(arguments) + '\x1B[0m');
+        //util.puts('\x1B[' + methods[level].color + 'm' + 'pid: ' + process.pid +' '+ getDate() + ' ' + levelStr + ' ' + path.basename(getClass(module)) +':' + getLine() + ' - ' + getMessage(arguments) + '\x1B[0m');
       }
     };
   }
