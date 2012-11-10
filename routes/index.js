@@ -5,13 +5,14 @@ var logger    = require('../core/logger').logger(module);
 var path      = require('path');
 
 function FeedSyncResponseBuilder(req, res) {
-  this.xml  = new asyncxml.Builder({pretty:false});
-  this.db   = req.app.get('dbHelper');
-  this.res  = res;
-  this.req  = req;
+  this.xml          = new asyncxml.Builder({pretty:false});
+  this.db           = req.app.get('dbHelper');
+  this.res          = res;
+  this.req          = req;
 
-  this.currentUser = res.locals.user;
-
+  this.currentUser  = res.locals.user;
+  this.channels_ids = [];
+  this.items_ids    = [];
   this.prepareResponse();
   this.root = this.xml.tag("feeds", { version:"0.1" });
   this.buildChannelsXML();
@@ -36,6 +37,7 @@ FeedSyncResponseBuilder.prototype.buildChannelsXML = function() {
 FeedSyncResponseBuilder.prototype.addNextChannel = function() {
   var channel = this.channels.shift();
   if (channel) {
+    this.channels_ids.push(channel.id);
     var channel_tag = this.channels_tag.tag("channel");
       channel_tag.tag("uid").text(channel.id.toString()).up();
       channel_tag.tag("title").text(channel.title.toString(), { escape: true }).up();
@@ -55,7 +57,7 @@ FeedSyncResponseBuilder.prototype.addNextChannel = function() {
 
 FeedSyncResponseBuilder.prototype.buildItemsXML = function() {
   var _this = this;
-  this.db.Item.findAll({ order: "createdAt DESC" }).success(function(items) {
+  this.db.Item.findAll({ order: "createdAt DESC", where: { id: this.channels_ids } }).success(function(items) {
     logger.info("Fetched items count: ", items.length);
     _this.items     = items;
     _this.items_tag = _this.root.tag("items");
@@ -67,6 +69,7 @@ FeedSyncResponseBuilder.prototype.addNextItem = function() {
   var item = this.items.pop();
   if (item) {
     var item_tag = this.items_tag.tag("item", { uid: item.id.toString() });
+      this.items_ids.push(item.id);
       item_tag.tag("feed-uid", item.FeedId.toString()).up();
       item_tag.tag("title").text(item.title, { escape: true }).up();
       item_tag.tag("url").text(item.url, { escape: true }).up();
@@ -86,7 +89,7 @@ FeedSyncResponseBuilder.prototype.addNextItem = function() {
 
 FeedSyncResponseBuilder.prototype.buildImagesXML = function() {
   var _this = this;
-  this.db.Image.findAll().success(function(images) {
+  this.db.Image.findAll({ where: { ItemId: this.items_ids } }).success(function(images) {
     logger.info("Fetched images count: ", images.length);
     _this.images = images;
     _this.images_tag = _this.root.tag("images");
