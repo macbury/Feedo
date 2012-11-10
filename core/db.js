@@ -29,7 +29,9 @@ DatabaseHelper.prototype.userByToken = function(token, cb) {
     if (error || t == null) {
       cb(error, null);
     } else {
-      _this.User.find(t.UserId).complete(cb);
+      _this.User.find(t.UserId).complete(function(error, user) {
+        cb(error, user, t);
+      });
     }
   });
 }

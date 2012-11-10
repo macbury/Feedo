@@ -3,6 +3,7 @@ var streamify = require('dt-stream');
 var fs        = require('fs');
 var logger    = require('../core/logger').logger(module);
 var path      = require('path');
+
 function FeedSyncResponseBuilder(req, res) {
   this.xml  = new asyncxml.Builder({pretty:false});
   this.db   = req.app.get('dbHelper');
@@ -24,7 +25,6 @@ FeedSyncResponseBuilder.prototype.prepareResponse = function() {
 
 FeedSyncResponseBuilder.prototype.buildChannelsXML = function() {
   var _this = this;
-  console.log(this.currentUser);
   this.currentUser.getSubscriptions().success(function(channels) {
     logger.info("Fetched feeds count: ", channels.length);
     _this.channels = channels;

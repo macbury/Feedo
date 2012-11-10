@@ -14,8 +14,16 @@ function register(dbHelper, body, cb) {
   });
 }
 
+exports.import = function(req, res) {
+
+}
+
 exports.gcm = function(req, res) {
-  
+  var registration_token = req.param('registration_token');
+  req.token.gcm_key = registration_token;
+  req.token.save().complete(function(error, token){
+    res.send(200, jsonxml({ session_token: token.hash, registration_token: registration_token }));
+  });
 }
 
 exports.auth = function(req, res){
@@ -30,7 +38,6 @@ exports.auth = function(req, res){
       "Authorization": "GoogleLogin auth="+authToken
     } 
   }, function (error, response, body) {
-    console.log(response.statusCode);
     if(error || response.statusCode != 200) {
       logger.debug("Starting authorization with token: ", error);
       res.send(401, jsonxml({ error: "invalid google token" }));

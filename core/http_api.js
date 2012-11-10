@@ -48,11 +48,12 @@ var userRequired = function(req, res, next){
   logger.info("Validating token:", key);
   if (!key) return res.send(400, jsonxml({ error: 'token is required' }));
   
-  req.app.get('dbHelper').userByToken(key, function(error, user) {
+  req.app.get('dbHelper').userByToken(key, function(error, user, token) {
     if (user == null) {
       res.send(401, jsonxml({ error: 'token is invalid' }));
     } else {
-      req.user = user;
+      req.token = token;
+      req.user  = user;
       next();
     }
   });
@@ -67,8 +68,10 @@ app.use(app.router);
 var users = require("../routes/user");
 
 app.post('/api/auth', apiKeyRequired, users.auth);
+app.post('/api/my/gcm', [apiKeyRequired, userRequired], users.gcm);
+app.post('/api/my/import', [apiKeyRequired, userRequired], users.import);
 app.get('/api/my/stream', [apiKeyRequired, userRequired], routes.index);
-app.get('/api/my/gcm', users.gcm);
+
 
 app.use(function(req, res){
   res.send(404, { error: "Lame, can't find that" });
