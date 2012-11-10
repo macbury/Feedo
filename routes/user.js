@@ -3,7 +3,8 @@ var jsonxml         = require('jsontoxml');
 var logger          = require('../core/logger').logger(module);
 var crypto          = require('crypto');
 var request         = require("request");
-var GOOGLE_AUTH_URL = 'http://www.google.com/reader/api/0/user-info';
+var GOOGLE_AUTH_URL             = 'http://www.google.com/reader/api/0/user-info';
+var GOOGLE_SUBSCRIPTIONS_IMPORT = 'http://www.google.com/reader/api/0/subscription/list?output=json';
 
 function register(dbHelper, body, cb) {
   dbHelper.User.create({
@@ -16,8 +17,31 @@ function register(dbHelper, body, cb) {
 
 exports.import = function(req, res) {
   var registration_token = req.param('google_auth_token');
-  
+  logger.info("Downloading url: ", GOOGLE_SUBSCRIPTIONS_IMPORT);
+  request({ 
+    url:     GOOGLE_SUBSCRIPTIONS_IMPORT, 
+    timeout: Constants.ItemDownloadTimeout * 1000, 
+    headers: {
+      "Authorization": "GoogleLogin auth="+registration_token
+    } 
+  }, function (error, response, body) {
+    logger.debug("Recived data from google");
+    if(error || response.statusCode != 200) {
+      logger.debug("Starting authorization with token: ", error);
+      res.send(401, jsonxml({ error: "invalid google token" }));
+    } else {
+      body = JSON.parse(body);
+
+      for (var i = body.subscriptions.length - 1; i >= 0; i--) {
+        var subscription = body.subscriptions[i];
+        var url          = subscription.id.replace(/^feed\//i,'');
+        logger.info("Feed url: ", url);
+      }
+      res.send(200, jsonxml({ status: "ok" }));
+    }
+  });
 }
+
 
 exports.gcm = function(req, res) {
   var registration_token = req.param('registration_token');
