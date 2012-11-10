@@ -15,7 +15,8 @@ function register(dbHelper, body, cb) {
 }
 
 exports.import = function(req, res) {
-
+  var registration_token = req.param('google_auth_token');
+  
 }
 
 exports.gcm = function(req, res) {
@@ -27,7 +28,7 @@ exports.gcm = function(req, res) {
 }
 
 exports.auth = function(req, res){
-  var authToken = req.param('token');
+  var authToken = req.param('google_auth_token');
   var _this     = this;
   var dbHelper  = req.app.get('dbHelper');
   logger.info("Starting authorization with token: ", authToken);

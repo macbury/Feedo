@@ -3,16 +3,24 @@ var streamify = require('dt-stream');
 var fs        = require('fs');
 var logger    = require('../core/logger').logger(module);
 var path      = require('path');
-
+var util      = require('util');
+require('date-utils');
 function FeedSyncResponseBuilder(req, res) {
   this.xml          = new asyncxml.Builder({pretty:false});
   this.db           = req.app.get('dbHelper');
   this.res          = res;
   this.req          = req;
 
+  var miliseconds   = parseInt(req.param('since'));
+  if (isNaN(miliseconds)) {
+    miliseconds = 0;
+  }
+  this.lastDate     = new Date(miliseconds);
+  logger.info("current date: ", this.lastDate);
+
   this.currentUser  = res.locals.user;
-  this.channels_ids = [];
-  this.items_ids    = [];
+  this.channels_ids = [-1];
+  this.items_ids    = [-1];
   this.prepareResponse();
   this.root = this.xml.tag("feeds", { version:"0.1" });
   this.buildChannelsXML();
@@ -26,6 +34,7 @@ FeedSyncResponseBuilder.prototype.prepareResponse = function() {
 
 FeedSyncResponseBuilder.prototype.buildChannelsXML = function() {
   var _this = this;
+  logger.info("Building channel: ", this.lastDate.getTime());
   this.currentUser.getSubscriptions().success(function(channels) {
     logger.info("Fetched feeds count: ", channels.length);
     _this.channels = channels;
@@ -57,7 +66,7 @@ FeedSyncResponseBuilder.prototype.addNextChannel = function() {
 
 FeedSyncResponseBuilder.prototype.buildItemsXML = function() {
   var _this = this;
-  this.db.Item.findAll({ order: "createdAt DESC", where: { id: this.channels_ids } }).success(function(items) {
+  this.db.Item.findAll({ order: "createdAt DESC", where: ["Items.FeedId IN (?) AND Items.pubDate > ?", this.channels_ids, this.lastDate] }).success(function(items) {
     logger.info("Fetched items count: ", items.length);
     _this.items     = items;
     _this.items_tag = _this.root.tag("items");
@@ -73,7 +82,7 @@ FeedSyncResponseBuilder.prototype.addNextItem = function() {
       item_tag.tag("feed-uid", item.FeedId.toString()).up();
       item_tag.tag("title").text(item.title, { escape: true }).up();
       item_tag.tag("url").text(item.url, { escape: true }).up();
-      channel.tag("pubDate").text(feed.createdAt.toString(), { escape: true }).up();
+      item_tag.tag("pubDate").text(item.createdAt.toString(), { escape: true }).up();
       item_tag.tag("content").raw('<![CDATA['+item.body+']]>').up();
     item_tag.up();
 
@@ -89,7 +98,7 @@ FeedSyncResponseBuilder.prototype.addNextItem = function() {
 
 FeedSyncResponseBuilder.prototype.buildImagesXML = function() {
   var _this = this;
-  this.db.Image.findAll({ where: { ItemId: this.items_ids } }).success(function(images) {
+  this.db.Image.findAll({ where: ["Images.ItemId IN (?)", this.items_ids] }).success(function(images) {
     logger.info("Fetched images count: ", images.length);
     _this.images = images;
     _this.images_tag = _this.root.tag("images");

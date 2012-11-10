@@ -26,9 +26,9 @@ function feedFetchHaveFinished(feedParser) {
     message.addData('action','refresh');
     message.collapseKey = 'refresh';
 
-    sender.send(message, registrationIds, 4, function (result) {
-      logger.info(result);
-    });
+    //sender.send(message, registrationIds, 4, function (result) {
+      //logger.info(result);
+    //});
   }
 }
 
