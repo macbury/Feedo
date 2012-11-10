@@ -9,6 +9,8 @@ function FeedSyncResponseBuilder(req, res) {
   this.res  = res;
   this.req  = req;
 
+  this.currentUser = req.user;
+
   this.prepareResponse();
   this.root = this.xml.tag("feeds", { version:"0.1" });
   this.buildChannelsXML();
@@ -22,7 +24,8 @@ FeedSyncResponseBuilder.prototype.prepareResponse = function() {
 
 FeedSyncResponseBuilder.prototype.buildChannelsXML = function() {
   var _this = this;
-  this.db.Feed.findAll().success(function(channels) {
+  console.log(this.currentUser);
+  this.currentUser.getSubscriptions().success(function(channels) {
     logger.info("Fetched feeds count: ", channels.length);
     _this.channels = channels;
     _this.channels_tag = _this.root.tag("channels");

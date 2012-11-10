@@ -24,8 +24,14 @@ function DatabaseHelper(config) {
 }
 
 DatabaseHelper.prototype.userByToken = function(token, cb) {
-  var SQL = "SELECT Users.* FROM Users INNER JOIN Tokens ON Users.id = Tokens.UserId WHERE Tokens.hash = 'afe56a7415a59f5f3cc6b491b8e8f9328737b6db';";
-  this.db.query(SQL, this.User).complete(cb);
+  var _this = this;
+  this.Token.find({where: { hash: token }}).complete(function(error, t) {
+    if (error || t == null) {
+      cb(error, null);
+    } else {
+      _this.User.find(t.UserId).complete(cb);
+    }
+  });
 }
 
 DatabaseHelper.prototype.buildUser = function() {
@@ -81,18 +87,19 @@ DatabaseHelper.prototype.buildItem = function() {
 }
 
 DatabaseHelper.prototype.sync = function() {
+  this.User.hasMany(this.Feed, { as: 'Subscriptions' });
+  this.Feed.hasMany(this.User);
+  
   this.Feed.hasMany(this.Item);
   this.Item.belongsTo(this.Feed);
   this.Item.hasMany(this.Image);
   this.Image.belongsTo(this.Item);
-  this.User.hasMany(this.Feed, { as: 'Subscriptions' });
-  this.Feed.hasMany(this.User, { as: 'Subscriptions' });
-  
+
   this.User.hasMany(this.Token);
   var chainer = new Sequelize.Utils.QueryChainer();
   chainer.add(this.User.sync());
-  chainer.add(this.Token.sync());
   chainer.add(this.Feed.sync());
+  chainer.add(this.Token.sync());
   chainer.add(this.Image.sync());
   chainer.add(this.Item.sync());
   chainer.add(this.ApiKey.sync());
