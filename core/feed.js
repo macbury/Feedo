@@ -11,16 +11,16 @@ var Iconv          = require('iconv').Iconv;
 require('date-utils');
 
 function Feed(obj, dbHelper) {
-  this.dbObject = obj;
-  logger.info("New feed parser for: "+this.dbObject.url);
-  this.broken = false;
+  this.dbObject    = obj;
+  this.broken      = false;
   this.fetchCount  = 0;
-  this.parser = new FeedParser();
-  this.dbHelper = dbHelper;
-  this.newItems = false;
-  this.fetchedXML = false;
-  var _this   = this;
+  this.parser      = new FeedParser();
+  this.dbHelper    = dbHelper;
+  this.newItems    = false;
+  this.fetchedXML  = false;
+  var _this        = this;
 
+  logger.info("New feed parser for: "+this.dbObject.url);
   /*this.parser.on('title', function(title) {
     logger.info('title of feed is', title);
     _this.dbObject.title = title;
@@ -137,7 +137,11 @@ Feed.prototype.onArticle = function(article) {
     return;
   }
   this.dbObject.title = article.meta.title;
-  
+  this.dbObject.ready = true;
+  if (this.dbObject.title == null) {
+    this.dbObject.title = "Feed "+this.dbObject.id.toString();
+  }
+
   var item      = new Item(url, article); 
   item.dbHelper = this.dbHelper;
   item.onFinish = function (success) { _this.insertArticleToDB(article, item); };

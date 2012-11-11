@@ -10,7 +10,7 @@ function WorkerManager(config) {
   var _this       = this;
   this.dbHelper   = new DatabaseHelper(config.db);
   this.redis      = new RedisQueue(config.redis);
-  this.maxWorkers = numCPUs;
+  this.maxWorkers = numCPUs * 2;
 
   this.dbHelper.sync().run().success(function(){
     _this.asRepl();
@@ -57,9 +57,7 @@ WorkerManager.prototype.startWorkers = function(num) {
   for (var i = 0; i < num; i++) {
     var worker = cluster.fork();
     worker.on('message', function(message) { _this.onWorkerMessage(message); });
-    worker.on('uncaughtException', function(err) {
-      logger.error("Worker fatal exception", err);
-    });
+
     this.totalWorkers++;
     logger.info('Staring ' + worker.process.pid);
   }

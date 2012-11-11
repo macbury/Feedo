@@ -9,6 +9,14 @@ var RunningFeeds = [];
 var sender       = null;
 var redisQueue   = null;
 var logger       = require('./logger').logger(module);
+var fs           = require('fs');
+
+process.on('uncaughtException', function(error) {
+  logger.error(error);
+  logger.error(error.stack);
+  throw(error);
+});
+
 
 function feedFetchHaveFinished(feedParser) {
   var index = RunningFeeds.indexOf(feedParser);
@@ -56,10 +64,12 @@ function getFeedsToSync() {
     }
 
     dbHelper.Feed.find({ where: { id: modelId } }).success(function(feedModel) {
-      logger.info("New feed to parse: "+ feedModel.url);
-      var feedParser = new Feed(feedModel, dbHelper); 
-      RunningFeeds.push(feedParser);
-      feedParser.start(feedFetchHaveFinished);
+      if (feedModel) {
+        logger.info("New feed to parse: "+ feedModel.url);
+        var feedParser = new Feed(feedModel, dbHelper); 
+        RunningFeeds.push(feedParser);
+        feedParser.start(feedFetchHaveFinished);
+      }
       nextPopQueue();
     });
   });

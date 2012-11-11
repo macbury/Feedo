@@ -37,7 +37,14 @@ FeedSyncResponseBuilder.prototype.buildChannelsXML = function() {
   logger.info("Building channel: ", this.lastDate.getTime());
   this.currentUser.getSubscriptions().success(function(channels) {
     logger.info("Fetched feeds count: ", channels.length);
-    _this.channels = channels;
+    _this.channels = [];
+
+    for (var i = channels.length - 1; i >= 0; i--) {
+      if (channels[i].ready) {
+        _this.channels.push(channels[i]);
+      }
+    };
+
     _this.channels_tag = _this.root.tag("channels");
     _this.addNextChannel();
   });

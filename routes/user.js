@@ -1,8 +1,9 @@
-var Constants       = require('../core/constants');
-var jsonxml         = require('jsontoxml');
-var logger          = require('../core/logger').logger(module);
-var crypto          = require('crypto');
-var request         = require("request");
+var Constants                   = require('../core/constants');
+var GoogleImporter              = require('../core/google_importer').klass;
+var jsonxml                     = require('jsontoxml');
+var logger                      = require('../core/logger').logger(module);
+var crypto                      = require('crypto');
+var request                     = require("request");
 var GOOGLE_AUTH_URL             = 'http://www.google.com/reader/api/0/user-info';
 var GOOGLE_SUBSCRIPTIONS_IMPORT = 'http://www.google.com/reader/api/0/subscription/list?output=json';
 
@@ -16,6 +17,7 @@ function register(dbHelper, body, cb) {
 }
 
 exports.import = function(req, res) {
+  var dbHelper           = req.app.get('dbHelper');
   var registration_token = req.param('google_auth_token');
   logger.info("Downloading url: ", GOOGLE_SUBSCRIPTIONS_IMPORT);
   request({ 
@@ -31,13 +33,17 @@ exports.import = function(req, res) {
       res.send(401, jsonxml({ error: "invalid google token" }));
     } else {
       body = JSON.parse(body);
-
+      var feed_urls = [];
       for (var i = body.subscriptions.length - 1; i >= 0; i--) {
         var subscription = body.subscriptions[i];
         var url          = subscription.id.replace(/^feed\//i,'');
-        logger.info("Feed url: ", url);
+        logger.info("Found url: ", url);
+        feed_urls.push(url);
       }
-      res.send(200, jsonxml({ status: "ok" }));
+      
+      var gi = new GoogleImporter(dbHelper, res.locals.user, feed_urls);
+      gi.onFinish = function() { res.send(200, jsonxml({ status: "ok" })); };
+      gi.run();
     }
   });
 }
@@ -45,8 +51,8 @@ exports.import = function(req, res) {
 
 exports.gcm = function(req, res) {
   var registration_token = req.param('registration_token');
-  req.token.gcm_key = registration_token;
-  req.token.save().complete(function(error, token){
+  res.locals.token.gcm_key = registration_token;
+  res.locals.token.save().complete(function(error, token){
     res.send(200, jsonxml({ session_token: token.hash, registration_token: registration_token }));
   });
 }

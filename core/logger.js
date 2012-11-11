@@ -69,6 +69,7 @@ var defaultLogLevel = 'trace';
 var logLevels       = config.level || {};
 var useColor        = config.color || (config.color == 'auto' && process.env.TERM && process.env.TERM.indexOf('color') >= 0);
 var logFile         = fs.createWriteStream(__dirname+'/../log/shit.log', {'flags': 'a'});
+var errorFile       = fs.createWriteStream(__dirname+'/../log/error.log', {'flags': 'a'});
 
 exports.logger = function(module) {
   var methods = {
@@ -89,7 +90,11 @@ exports.logger = function(module) {
     if (levelStr.length == 4) levelStr += ' ';
     logger[level] = function(msg) {
       if (methods[level].priority >= priority) {
-        logFile.write('\x1B[' + methods[level].color + 'm' + 'pid: ' + process.pid +' '+ getDate() + ' ' + levelStr + ' ' + path.basename(getClass(module)) +':' + getLine() + ' - ' + getMessage(arguments) + '\x1B[0m\n');
+        var msg = '\x1B[' + methods[level].color + 'm' + 'pid: ' + process.pid +' '+ getDate() + ' ' + levelStr + ' ' + path.basename(getClass(module)) +':' + getLine() + ' - ' + getMessage(arguments) + '\x1B[0m\n';
+        if (levelStr == 'ERROR') {
+          errorFile.write(msg)
+        };
+        logFile.write(msg);
       }
     };
   }
