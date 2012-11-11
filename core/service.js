@@ -10,6 +10,7 @@ var sender       = null;
 var redisQueue   = null;
 var logger       = require('./logger').logger(module);
 var fs           = require('fs');
+require('date-utils');
 
 process.on('uncaughtException', function(error) {
   logger.error(error);
@@ -46,12 +47,8 @@ function nextPopQueue() {
 }
 
 function getFeedsToSync() {
+  logger.info("There are: " + RunningFeeds.length + " parsers of max on this worker: "+Constants.MaxRunningJobsPerWorker);
   if (RunningFeeds.length >= Constants.MaxRunningJobsPerWorker) {
-    logger.info("There are: " + RunningFeeds.length + " parsers of max on this worker: "+Constants.MaxRunningJobsPerWorker);
-    for (var i = 0; i < RunningFeeds.length; i++) {
-      //logger.debug(RunningFeeds[i].stringStatus());
-      RunningFeeds[i].checkIfFinished();
-    }
     nextPopQueue();
     return;
   };
@@ -66,11 +63,18 @@ function getFeedsToSync() {
     dbHelper.Feed.find({ where: { id: modelId } }).success(function(feedModel) {
       if (feedModel) {
         logger.info("New feed to parse: "+ feedModel.url);
-        var feedParser = new Feed(feedModel, dbHelper); 
-        RunningFeeds.push(feedParser);
-        feedParser.start(feedFetchHaveFinished);
+        feedModel.nextPull = new Date();
+        feedModel.nextPull.addMinutes(Constants.RefreshEvery * 5); //TODO find better solutions for locking
+        feedModel.save().complete(function(error, status) {
+          var feedParser = new Feed(feedModel, dbHelper); 
+          RunningFeeds.push(feedParser);
+          feedParser.start(feedFetchHaveFinished);
+          nextPopQueue();  
+        });
+      } else {
+        nextPopQueue();  
       }
-      nextPopQueue();
+      
     });
   });
 }

@@ -18,16 +18,21 @@ function Feed(obj, dbHelper) {
   this.dbHelper    = dbHelper;
   this.newItems    = false;
   this.fetchedXML  = false;
+  this.articles    = [];
+  this.articles_hash = {};
+  this.articles_to_check = [];
   var _this        = this;
 
-  logger.info("New feed parser for: "+this.dbObject.url);
+  logger.info("New feed parser for: ",this.dbObject.url);
+  
   /*this.parser.on('title', function(title) {
     logger.info('title of feed is', title);
     _this.dbObject.title = title;
   });*/
 
   this.parser.on("article", function(article) {
-    _this.onArticle(article);
+    logger.info("Found article in rss xml");
+    _this.articles.push(article);
   });
 
   this.parser.on("error", function(error) {
@@ -35,10 +40,93 @@ function Feed(obj, dbHelper) {
   });
 
   this.parser.on("end", function() {
+    logger.info("End of rss file");
     _this.fetchedXML = true;
-    _this.checkIfFinished();
+    _this.processArticles();
   });
 
+}
+
+Feed.prototype.processArticles = function() {
+  var _this = this;
+  this.articles_urls = [];
+  for (var i=0; i < this.articles.length; i++) {
+    var article = this.articles[i];
+    this.articles_urls.push(article.link);
+    this.articles_hash[article.link] = article;
+  }
+  
+  logger.info("Checking for diffrence between db and rss ", this.articles_urls);
+  var query_array = JSON.parse(JSON.stringify(this.articles_urls));
+  query_array.push('-1');
+  this.dbHelper.Item.findAll({ where: { url: query_array, FeedId: this.dbObject.id } }).success(function(items){
+    var items_count = 0;
+    if (items != null) { items_count = items.length };
+    if(items == null || items_count == _this.articles_urls.length) {
+      logger.info("No new articles found");
+      _this.onEnd();
+    } else {
+      _this.articles = [];
+      var articles_urls_in_db = [];
+      
+      for (var i=0; i < items.length; i++) {
+        var item = items[i];
+        articles_urls_in_db.push(item.url);
+      }
+      logger.info("Articles in DB: ", articles_urls_in_db);
+      logger.info("Articles in RSS: ", _this.articles_urls);
+      
+      for (var i=0; i < _this.articles_urls.length; i++) {
+        var article_url = _this.articles_urls[i];
+        
+        if (articles_urls_in_db.indexOf(article_url) == -1) {
+          logger.info("New article url to download: ", article_url);
+          _this.articles.push(_this.articles_hash[article_url]);
+        } else {
+          logger.info("We have this article in db: ", article_url);
+        }
+      };
+      
+      _this.nextArticle();
+    }
+  }).error(function(error) {
+    logger.error("Could not check in db for new feeds", error);
+    _this.onEnd();
+  });
+}
+
+Feed.prototype.nextSynchronizedArticle = function() {
+  var _this = this;
+  var article = this.articles.pop();
+  
+  if (article) {
+    var url = article.link;
+    if (url == null) {
+      logger.info("URL for this article is null!", article);
+      this.nextSynchronizedArticle();
+    } else {
+      logger.info("Poped new article from queu ", article.link);
+      this.dbObject.title = article.meta.title;
+      this.dbObject.ready = true;
+      if (this.dbObject.title == null) {
+        this.dbObject.title = "Feed "+this.dbObject.id.toString();
+      }
+      
+      var item      = new Item(url, article); 
+      item.dbHelper = this.dbHelper;
+      item.onFinish = function (success) { _this.insertArticleToDB(article, item); };
+      item.download();
+    }
+  } else {
+    this.onEnd();
+  }
+}
+
+Feed.prototype.nextArticle = function() {
+  var _this = this;
+  process.nextTick(function() {
+    _this.nextSynchronizedArticle();
+  });
 }
 
 Feed.prototype.onError = function(error) {
@@ -101,7 +189,7 @@ Feed.prototype.insertArticleToDB = function(article, item) {
   }).complete(function(error, itemModel) {
     if (error) {
       logger.error(error);
-      _this.popFeed();
+      _this.nextSynchronizedArticle();
     } else {
       var chainer = new Sequelize.Utils.QueryChainer();
       for (var i = 0; i < item.images_fetched.length; i++) {
@@ -121,57 +209,22 @@ Feed.prototype.insertArticleToDB = function(article, item) {
         if (error) {
           logger.error(error);
         }
-        _this.popFeed();
+        _this.nextSynchronizedArticle();
       });
     }
   });
 }
 
-Feed.prototype.onArticle = function(article) {
-  var _this = this;
-
-  var url = article.link;
-
-  if (url == null) {
-    logger.info("URL for this article is null!", article);
-    return;
-  }
-  this.dbObject.title = article.meta.title;
-  this.dbObject.ready = true;
-  if (this.dbObject.title == null) {
-    this.dbObject.title = "Feed "+this.dbObject.id.toString();
-  }
-
-  var item      = new Item(url, article); 
-  item.dbHelper = this.dbHelper;
-  item.onFinish = function (success) { _this.insertArticleToDB(article, item); };
-  
-  this.dbHelper.Item.findAll({ where: { url: url, FeedId: this.dbObject.id } }).success(function(items){
-    if (items == null || items.length == 0) {
-      logger.info("New article to download :"+ url);
-      _this.fetchCount++;
-      _this.newItems = true;
-      item.download();  
-    } else {
-      logger.info("Skipping article to download: "+ url);
-    }
-  }).error(function(error){
-    logger.error(error);
-    _this.checkIfFinished();
-  })
-
-}
-
 Feed.prototype.checkIfFinished = function() {
   logger.info("Downloads left for feed: "+ this.dbObject.id + " is: "+this.fetchCount);
-  if (this.fetchCount <= 0) {
+  if (this.articles.length <= 0) {
     this.onEnd();
   };
 }
 
 Feed.prototype.onEnd = function() {
-  logger.info("Ending syncing feed");
-  
+  logger.info("Ending syncRing feed");
+  var _this = this;
   if (this.broken) {
     if (this.dbObject.errorCount < Constants.MaxFeedFetchErrorCount) {
       this.dbObject.errorCount += 1;
@@ -188,9 +241,10 @@ Feed.prototype.onEnd = function() {
 
   this.dbObject.nextPull = new Date();
   this.dbObject.nextPull.addMinutes(Constants.RefreshEvery * (this.dbObject.errorCount + 1));
-  this.dbObject.save();
-  this.endCallback(this);
   logger.info("Finished, removing lock from feed, next check will be on: "+ JSON.stringify(this.dbObject.nextPull) + " for feed" +this.dbObject.id);
+  this.dbObject.save().complete(function(error, status){
+    _this.endCallback(_this);
+  }); 
 }
 
 exports.Feed = Feed;

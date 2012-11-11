@@ -60,6 +60,7 @@ Item.prototype.onFinish = function() {
 Item.prototype.analyzeRedabilityResult = function(result) {
   var _this = this;
   if (this.rss.description == null || result.content.toString().length >= this.rss.description.toString().length) {
+    this.hash = crypto.createHash('sha1').update(result.content.toString()).digest("hex");
     this.dbHelper.Item.count({ where: { hash: this.hash } }).complete(function(error, count) {
       if (count == 0) {
         _this.body = result.content;
@@ -132,7 +133,7 @@ Item.prototype.asyncDownloadNextImage = function() {
     var fileName = path.join(__dirname, '../data', image.hash+image.ext);
 
     request({url: image.url, encoding: 'binary', timeout: Constants.ImageDownloadTimeout * 1000 }, function(error, response, content) {
-      if (response != null && response.statusCode == 200 && content != null) {
+      if (response != null && response.statusCode == 200 && content != null && response.headers != null) {
         var contentType = response.headers["content-type"];
         var extName     = contentType.split('/')[1];
         var buffer      = null;
@@ -156,12 +157,14 @@ Item.prototype.asyncDownloadNextImage = function() {
             image["mimeType"] = contentType;
             image["width"]    = img.width;
             image["height"]   = img.height;
-            _this.images_fetched.push(image);
+            if(img.width > 1) {
+              _this.images_fetched.push(image);
+            }
           }
           _this.downloadNextImage();
         });
       } else {
-        logger.error("invalid response: " + JSON.stringify(response), image);
+        logger.error("invalid response: ", image);
         _this.downloadNextImage();
       }
     });
