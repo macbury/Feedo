@@ -12,7 +12,8 @@ exports.ImageDownloadTimeout    = 20;
 exports.ItemDownloadTimeout     = 40;
 exports.FeedDownloadTimeout     = 25;
 
-exports.RefreshEvery		        = 30; //minutes to next feed refresh
+exports.MaxEmptyRefresh         = 288;
+exports.RefreshEvery		        = 5; //minutes to next feed refresh
 exports.MaxRunningJobs          = 5; // how many jobs canbe added to queue
 exports.MaxRunningJobsPerWorker = 30;
 exports.AskForNewFeeds          = 1;

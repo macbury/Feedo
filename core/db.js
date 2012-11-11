@@ -84,7 +84,8 @@ DatabaseHelper.prototype.buildFeed = function() {
     errorMessage: { type: Sequelize.TEXT },
     lastRefresh: { type: Sequelize.DATE, defaultValue: Sequelize.NOW },
     feedType: { type: Sequelize.STRING },
-    ready: { type: Sequelize.BOOLEAN, defaultValue: false }
+    ready: { type: Sequelize.BOOLEAN, defaultValue: false },
+    emptyFetchCount: { type: Sequelize.INTEGER, defaultValue: 0 }
   },{});
 }
 

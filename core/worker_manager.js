@@ -10,7 +10,7 @@ function WorkerManager(config) {
   var _this       = this;
   this.dbHelper   = new DatabaseHelper(config.db);
   this.redis      = new RedisQueue(config.redis);
-  this.maxWorkers = numCPUs * 5;
+  this.maxWorkers = numCPUs;
 
   this.dbHelper.sync().run().success(function(){
     _this.asRepl();

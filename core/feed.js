@@ -63,6 +63,7 @@ Feed.prototype.processArticles = function() {
     var items_count = 0;
     if (items != null) { items_count = items.length };
     if(items == null || items_count == _this.articles_urls.length) {
+      _this.newItems = false;
       logger.info("No new articles found");
       _this.onEnd();
     } else {
@@ -87,6 +88,7 @@ Feed.prototype.processArticles = function() {
         }
       };
       
+      _this.newItems = (_this.articles.length > 0);
       _this.nextArticle();
     }
   }).error(function(error) {
@@ -223,24 +225,31 @@ Feed.prototype.checkIfFinished = function() {
 }
 
 Feed.prototype.onEnd = function() {
-  logger.info("Ending syncRing feed");
+  logger.info("Ending syncing feed: ", this.dbObject.url);
   var _this = this;
-  if (this.broken) {
-    if (this.dbObject.errorCount < Constants.MaxFeedFetchErrorCount) {
-      this.dbObject.errorCount += 1;
+
+  if (this.newItems) {
+    logger.debug("New items, setting emptyFetchCount to 0");
+    this.dbObject.emptyFetchCount = 0;
+    this.dbObject.lastRefresh     = new Date();
+  } else {
+    logger.debug("No new items(emptyFetchCount, MaxEmptyRefresh): ", [this.dbObject.emptyFetchCount, Constants.MaxEmptyRefresh]);
+    this.dbObject.emptyFetchCount += 1;
+    if (this.dbObject.emptyFetchCount > Constants.MaxEmptyRefresh) {
+      this.dbObject.emptyFetchCount = Constants.MaxEmptyRefresh;
     }
-    
+  }
+
+  if (this.broken) {
+    this.dbObject.errorCount += 1;
   } else {
     this.dbObject.errorMessage = null;
     this.dbObject.errorCount = 0;
   }
 
-  if (this.newItems) {
-    this.dbObject.lastRefresh = new Date();
-  }
 
   this.dbObject.nextPull = new Date();
-  this.dbObject.nextPull.addMinutes(Constants.RefreshEvery * (this.dbObject.errorCount + 1));
+  this.dbObject.nextPull.addMinutes(Constants.RefreshEvery * (this.dbObject.emptyFetchCount+1));
   logger.info("Finished, removing lock from feed, next check will be on: "+ JSON.stringify(this.dbObject.nextPull) + " for feed" +this.dbObject.id);
   this.dbObject.save().complete(function(error, status){
     _this.endCallback(_this);
