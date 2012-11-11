@@ -16,25 +16,7 @@
 	</natures>
 	<filteredResources>
 		<filter>
-			<id>1352505592390</id>
-			<name></name>
-			<type>30</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-node_modules/*.*</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1352505592443</id>
-			<name></name>
-			<type>26</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-FS/node_*</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1352505593563</id>
+			<id>1352656630313</id>
 			<name></name>
 			<type>6</type>
 			<matcher>
@@ -43,7 +25,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1352505593643</id>
+			<id>1352656630364</id>
 			<name></name>
 			<type>10</type>
 			<matcher>
@@ -52,147 +34,21 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1352505640395</id>
+			<id>1352656630407</id>
 			<name></name>
-			<type>30</type>
+			<type>14</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-node_modules/*.*</arguments>
+				<arguments>1.0-name-matches-false-false-data/</arguments>
 			</matcher>
 		</filter>
 		<filter>
-			<id>1352505640437</id>
+			<id>1352656630451</id>
 			<name></name>
-			<type>26</type>
+			<type>14</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-FS/node_*</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1352505640561</id>
-			<name></name>
-			<type>6</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-node_*</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1352505641546</id>
-			<name></name>
-			<type>10</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-node_*</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1352505641627</id>
-			<name></name>
-			<type>30</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-node_modules/*.*</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1352505641659</id>
-			<name></name>
-			<type>26</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-FS/node_*</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1352505641780</id>
-			<name></name>
-			<type>6</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-node_*</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1352505642779</id>
-			<name></name>
-			<type>10</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-node_*</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1352505644183</id>
-			<name></name>
-			<type>30</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-node_modules/*.*</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1352505644357</id>
-			<name></name>
-			<type>26</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-FS/node_*</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1352505644417</id>
-			<name></name>
-			<type>6</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-node_*</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1352505646000</id>
-			<name></name>
-			<type>10</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-node_*</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1352505646943</id>
-			<name></name>
-			<type>30</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-node_modules/*.*</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1352505646999</id>
-			<name></name>
-			<type>26</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-FS/node_*</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1352505647060</id>
-			<name></name>
-			<type>6</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-node_*</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1352505647860</id>
-			<name></name>
-			<type>10</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-node_*</arguments>
+				<arguments>1.0-name-matches-false-false-data/*</arguments>
 			</matcher>
 		</filter>
 	</filteredResources>

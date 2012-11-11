@@ -58,21 +58,24 @@ Item.prototype.onFinish = function() {
 }
 
 Item.prototype.analyzeRedabilityResult = function(result) {
+  var _this = this;
   if (this.rss.description == null || result.content.toString().length >= this.rss.description.toString().length) {
-    this.hash = crypto.createHash('sha1').update(result.content).digest("hex");
-    var _this = this;
     this.dbHelper.Item.count({ where: { hash: this.hash } }).complete(function(error, count) {
       if (count == 0) {
         _this.body = result.content;
         _this.downloadImages(result.images);
       } else {
         logger.info("Found similary item in db for item description, using rss description");
-        _this.processRssDescription();
+        process.nextTick(function() {
+          _this.processRssDescription();
+        });
       }
     });
     
   } else {
-    this.processRssDescription();
+    process.nextTick(function() {
+      _this.processRssDescription();
+    });
   }
 } 
 
@@ -98,7 +101,9 @@ Item.prototype.download = function() {
         _this.analyzeRedabilityResult(result);
       });
     } else {
-      _this.processRssDescription();
+      process.nextTick(function() {
+        _this.processRssDescription();
+      });
     }
   });
 }
@@ -127,7 +132,7 @@ Item.prototype.asyncDownloadNextImage = function() {
     var fileName = path.join(__dirname, '../data', image.hash+image.ext);
 
     request({url: image.url, encoding: 'binary', timeout: Constants.ImageDownloadTimeout * 1000 }, function(error, response, content) {
-      if (response != null && response.statusCode == 200) {
+      if (response != null && response.statusCode == 200 && content != null) {
         var contentType = response.headers["content-type"];
         var extName     = contentType.split('/')[1];
         var buffer      = null;

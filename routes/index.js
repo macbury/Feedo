@@ -35,16 +35,15 @@ FeedSyncResponseBuilder.prototype.prepareResponse = function() {
 FeedSyncResponseBuilder.prototype.buildChannelsXML = function() {
   var _this = this;
   logger.info("Building channel: ", this.lastDate.getTime());
-  this.currentUser.getSubscriptions().success(function(channels) {
+  var SQL = "SELECT * FROM Feeds INNER JOIN FeedsUsers ON FeedsUsers.FeedId = Feeds.id WHERE Feeds.ready=1 AND FeedsUsers.UserId="+this.currentUser.id+" GROUP BY Feeds.id;";
+  logger.info("Executing: ", SQL);
+  this.db.db.query(SQL, this.db.Feed).complete(function(error, channels) {
     logger.info("Fetched feeds count: ", channels.length);
-    _this.channels = [];
-
-    for (var i = channels.length - 1; i >= 0; i--) {
-      if (channels[i].ready) {
-        _this.channels.push(channels[i]);
-      }
-    };
-
+    if (error) {
+      logger.error("Could not find feeds for current user", error);
+    } else {
+      _this.channels = channels;
+    }
     _this.channels_tag = _this.root.tag("channels");
     _this.addNextChannel();
   });

@@ -1,4 +1,4 @@
-var Sequelize = require("sequelize");
+var Sequelize    = require("sequelize");
 var logger       = require('./logger').logger(module);
 function DatabaseHelper(config) {
   logger.info("Connecting to db: ",JSON.stringify(config));
@@ -19,8 +19,17 @@ function DatabaseHelper(config) {
   this.buildImage();
   this.buildFeed();
   this.buildItem();
-  
   this.buildApiKey();
+
+  this.User.hasMany(this.Feed, { as: 'Subscriptions' });
+  this.Feed.hasMany(this.User);
+  
+  this.Feed.hasMany(this.Item);
+  this.Item.belongsTo(this.Feed);
+  this.Item.hasMany(this.Image);
+  this.Image.belongsTo(this.Item);
+
+  this.User.hasMany(this.Token);
 }
 
 DatabaseHelper.prototype.userByToken = function(token, cb) {
@@ -75,7 +84,7 @@ DatabaseHelper.prototype.buildFeed = function() {
     errorMessage: { type: Sequelize.TEXT },
     lastRefresh: { type: Sequelize.DATE, defaultValue: Sequelize.NOW },
     feedType: { type: Sequelize.STRING },
-    ready: { type: Sequelize.BOOLEAN, default: false }
+    ready: { type: Sequelize.BOOLEAN, defaultValue: false }
   },{});
 }
 
@@ -90,15 +99,6 @@ DatabaseHelper.prototype.buildItem = function() {
 }
 
 DatabaseHelper.prototype.sync = function() {
-  this.User.hasMany(this.Feed, { as: 'Subscriptions' });
-  this.Feed.hasMany(this.User);
-  
-  this.Feed.hasMany(this.Item);
-  this.Item.belongsTo(this.Feed);
-  this.Item.hasMany(this.Image);
-  this.Image.belongsTo(this.Item);
-
-  this.User.hasMany(this.Token);
   var chainer = new Sequelize.Utils.QueryChainer();
   chainer.add(this.User.sync());
   chainer.add(this.Feed.sync());

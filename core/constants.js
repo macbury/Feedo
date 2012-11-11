@@ -9,12 +9,12 @@ exports.WorkerStatus = {
 
 // timeouts in seconds
 exports.ImageDownloadTimeout    = 20;
-exports.ItemDownloadTimeout     = 30;
-exports.FeedDownloadTimeout     = 15;
+exports.ItemDownloadTimeout     = 40;
+exports.FeedDownloadTimeout     = 25;
 
-exports.RefreshEvery		        = 10; //minutes to next feed refresh
-exports.MaxRunningJobs          = 10;
-exports.MaxRunningJobsPerWorker = 2;
+exports.RefreshEvery		        = 30; //minutes to next feed refresh
+exports.MaxRunningJobs          = 5; // how many jobs canbe added to queue
+exports.MaxRunningJobsPerWorker = 30;
 exports.AskForNewFeeds          = 0.2;
 exports.MaxFeedFetchErrorCount  = 5;
 
