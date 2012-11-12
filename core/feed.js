@@ -61,9 +61,14 @@ Feed.prototype.processArticles = function() {
     var article = this.articles[i];
     this.dbObject.title = article.meta.title;
     if (article.pubDate == null || article.pubDate >= this.dbObject.lastRefresh) {
-      logger.info("New article appered since(pubDate/lastRefresh): ", [article.pubDate, this.dbObject.lastRefresh]);
-      this.articles_urls.push(article.link);  
-      this.articles_hash[article.link] = article;
+      if (article.link) {
+        this.articles_urls.push(article.link);  
+        this.articles_hash[article.link] = article;
+        logger.info("New article appered since(pubDate/lastRefresh): ", [article.pubDate, this.dbObject.lastRefresh]);
+      } else {
+        logger.info("Skipped article because link is empty!");
+      }
+      
     } else {
       logger.info("Skipping article since(pubDate/lastRefresh): ", [article.pubDate, this.dbObject.lastRefresh]);
     }
