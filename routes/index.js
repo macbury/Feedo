@@ -11,7 +11,7 @@ function FeedSyncResponseBuilder(req, res) {
   this.res          = res;
   this.req          = req;
 
-  var miliseconds   = parseInt(req.param('since'));
+  var miliseconds   = parseInt(req.param('page'));
   if (isNaN(miliseconds)) {
     this.lastDate     = Date.yesterday();
   } else {
@@ -46,7 +46,13 @@ FeedSyncResponseBuilder.prototype.buildChannelsXML = function() {
     } else {
       _this.channels = channels;
     }
-    _this.channels_tag = _this.root.tag("channels");
+
+    var date = Date.yesterday().getTime();
+    for (var i = channels.length - 1; i >= 0; i--) {
+      date = Math.max(date,channels[i].lastRefresh);
+    };
+
+    _this.channels_tag = _this.root.tag("channels", { page: date, count: channels.length });
     _this.addNextChannel();
   });
 }
@@ -77,7 +83,7 @@ FeedSyncResponseBuilder.prototype.buildItemsXML = function() {
   this.db.Item.findAll({ order: "createdAt DESC", where: ["Items.FeedId IN (?) AND Items.pubDate > ?", this.channels_ids, this.lastDate] }).success(function(items) {
     logger.info("Fetched items count: ", items.length);
     _this.items     = items;
-    _this.items_tag = _this.root.tag("items");
+    _this.items_tag = _this.root.tag("items", { count: items.length });
     _this.addNextItem();
   });
 }
@@ -109,7 +115,7 @@ FeedSyncResponseBuilder.prototype.buildImagesXML = function() {
   this.db.Image.findAll({ where: ["Images.ItemId IN (?)", this.items_ids] }).success(function(images) {
     logger.info("Fetched images count: ", images.length);
     _this.images = images;
-    _this.images_tag = _this.root.tag("images");
+    _this.images_tag = _this.root.tag("images", { count: images.length });
     _this.addNextImage();
   });
 }
