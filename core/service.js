@@ -28,16 +28,32 @@ function feedFetchHaveFinished(feedParser) {
   logger.info("Removing feed from quee, total parsers: " + RunningFeeds.length);
 
   if (feedParser.newItems) {
-    logger.info("New items for feed");
-    var message = new gcm.Message();
-    var registrationIds = ["APA91bFcEilK6PjWMEAIHPiAsJ7_ekQR08rtV5ju1qWkLu4H6_H_so5DxNalxYy0TZFVimfTfnd7hobGb9HB6CEroYi9q2pU5moZLHmIufOF5szZdfRp3EEzt1RU0Ibp1s1mj3bGX2nOecGNkLkQ39uvOmPIULl_jQ"];
+    logger.info("New items for feed, sending notification to user devices");
+    feedParser.dbObject.getUsers().success(function(users) {
+      var uids = [];
+      for (var i = users.length - 1; i >= 0; i--) {
+        uids.push(users[i].id);
+      }
+      if (uids.length > 0) {
+        logger.info("Users to push notifications:", uids);
+        dbHelper.Token.findAll({ where: ["UserId IN (?) AND gcm_key IS NOT NULL", uids] }).success(function(tokens){
+          var message = new gcm.Message();
+          var registrationIds = [];
+          for (var i = tokens.length - 1; i >= 0; i--) {
+            registrationIds.push(tokens[i].gcm_key);
+          }
+          if (registrationIds.length > 0) {
+            logger.info("Devices to push notifications:", registrationIds);
+            message.addData('action','refresh');
+            message.collapseKey = 'refresh';
+            sender.send(message, registrationIds, 4, function (result) {
+              logger.info(result);
+            });
+          }
+        });
+      }
+    });
     
-    message.addData('action','refresh');
-    message.collapseKey = 'refresh';
-
-    //sender.send(message, registrationIds, 4, function (result) {
-      //logger.info(result);
-    //});
   }
 }
 
