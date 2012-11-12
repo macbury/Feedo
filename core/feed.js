@@ -23,7 +23,7 @@ function Feed(obj, dbHelper) {
   this.articles_to_check = [];
 
   if (this.dbObject.lastRefresh == null) {
-    this.dbObject.lastRefresh = Date.yesterday();
+    this.dbObject.lastRefresh = Date.yesterday().addDays(-7);
   }
 
   var _this        = this;
@@ -55,8 +55,11 @@ function Feed(obj, dbHelper) {
 Feed.prototype.processArticles = function() {
   var _this = this;
   this.articles_urls = [];
+  this.dbObject.ready = true;
+
   for (var i=0; i < this.articles.length; i++) {
     var article = this.articles[i];
+    this.dbObject.title = article.meta.title;
     if (article.pubDate == null || article.pubDate >= this.dbObject.lastRefresh) {
       logger.info("New article appered since(pubDate/lastRefresh): ", [article.pubDate, this.dbObject.lastRefresh]);
       this.articles_urls.push(article.link);  
@@ -66,6 +69,10 @@ Feed.prototype.processArticles = function() {
     }
   }
   
+  if (this.dbObject.title == null) {
+    this.dbObject.title = "Feed "+this.dbObject.id.toString();
+  }
+
   if (this.articles_urls.length == 0) {
     logger.info("There are no new items since", this.dbObject.lastRefresh);
     this.onEnd();
@@ -123,11 +130,6 @@ Feed.prototype.nextSynchronizedArticle = function() {
       this.nextSynchronizedArticle();
     } else {
       logger.info("Poped new article from queu ", article.link);
-      this.dbObject.title = article.meta.title;
-      this.dbObject.ready = true;
-      if (this.dbObject.title == null) {
-        this.dbObject.title = "Feed "+this.dbObject.id.toString();
-      }
       
       var item      = new Item(url, article); 
       item.dbHelper = this.dbHelper;
