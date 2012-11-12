@@ -13,9 +13,11 @@ function FeedSyncResponseBuilder(req, res) {
 
   var miliseconds   = parseInt(req.param('since'));
   if (isNaN(miliseconds)) {
-    miliseconds = 0;
+    this.lastDate     = Date.yesterday();
+  } else {
+    this.lastDate     = new Date(miliseconds);  
   }
-  this.lastDate     = new Date(miliseconds);
+  
   logger.info("current date: ", this.lastDate);
 
   this.currentUser  = res.locals.user;
@@ -88,7 +90,7 @@ FeedSyncResponseBuilder.prototype.addNextItem = function() {
       item_tag.tag("feed-uid", item.FeedId.toString()).up();
       item_tag.tag("title").text(item.title, { escape: true }).up();
       item_tag.tag("url").text(item.url, { escape: true }).up();
-      item_tag.tag("pubDate").text(item.createdAt.toString(), { escape: true }).up();
+      item_tag.tag("pubDate").text(item.pubDate.toString(), { escape: true }).up();
       item_tag.tag("content").raw('<![CDATA['+item.body+']]>').up();
     item_tag.up();
 

@@ -201,7 +201,7 @@ Feed.prototype.insertArticleToDB = function(article, item) {
   this.dbHelper.Item.create({
     url:     article.link,
     title:   article.title,
-    pubDate: article.pubDate,
+    pubDate: article.pubDate || new Date(),
     body:    item.body,
     hash:    item.hash,
     FeedId: _this.dbObject.id

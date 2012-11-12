@@ -7,11 +7,11 @@ var RedisConstants  = require("./constants").RedisConstants;
 var logger          = require('./logger').logger(module);
 var repl            = require("repl");
 function WorkerManager(config) {
-  var _this       = this;
-  this.dbHelper   = new DatabaseHelper(config.db);
-  this.redis      = new RedisQueue(config.redis);
-  this.maxWorkers = numCPUs;
-
+  var _this              = this;
+  this.dbHelper          = new DatabaseHelper(config.db);
+  this.redis             = new RedisQueue(config.redis);
+  this.maxWorkers        = numCPUs;
+  this.emptyRefreshCount = 1;
   this.dbHelper.sync().run().success(function(){
     _this.asRepl();
     _this.startWorkers(_this.maxWorkers);
@@ -69,7 +69,7 @@ WorkerManager.prototype.waitForFeeds = function() {
   var _this = this;
   setTimeout(function(){
     _this.refreshQueue();
-  }, 1000);
+  }, 1000 * this.emptyRefreshCount);
 }
 
 WorkerManager.prototype.refreshQueue = function(){
@@ -78,8 +78,8 @@ WorkerManager.prototype.refreshQueue = function(){
     logger.info("Locked feeds: "+ JSON.stringify(feed_ids));
     if (feed_ids.length >= Constants.MaxRunningJobs) {
       logger.info("Maximum jobs are locked for this machine, skipping...");
+      _this.emptyRefreshCount = 1;
       _this.waitForFeeds();
-      return;
     } else {
       var diff = Constants.MaxRunningJobs - feed_ids.length;
 
@@ -88,6 +88,14 @@ WorkerManager.prototype.refreshQueue = function(){
       }
 
       _this.dbHelper.Feed.findAll({ where: [" Feeds.id NOT IN (?) AND (Feeds.nextPull IS NULL OR Feeds.nextPull < NOW()) ", feed_ids], limit: 10, order: "nextPull ASC" }).success(function(feeds) {
+        if (feeds.length == 0) {
+          _this.emptyRefreshCount += 1;
+          if (_this.emptyRefreshCount > Constants.FeedCheckIntervalMax) {
+            _this.emptyRefreshCount = Constants.FeedCheckIntervalMax;
+          }
+        } else {
+          _this.emptyRefreshCount = 1;
+        }
         for (var i = 0; i < feeds.length; i++) {
           _this.redis.addFeedToQueue(feeds[i]);
         };
@@ -95,6 +103,7 @@ WorkerManager.prototype.refreshQueue = function(){
         _this.waitForFeeds();
       }).error(function(error){
         logger.info("Could not fetch new feeds: "+ error);
+        _this.emptyRefreshCount = 1;
         _this.waitForFeeds();
       });
     }
