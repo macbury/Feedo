@@ -74,7 +74,7 @@ app.get('/api/my/stream', [apiKeyRequired, userRequired], routes.index);
 
 
 app.use(function(req, res){
-  res.send(404, { error: "Lame, can't find that" });
+  res.send(404, '<?xml version="1.0" encoding="UTF-8"?>\n' + jsonxml({ error: 'what!? what!? what!?' }));
 });
 
 

@@ -5,17 +5,13 @@ var CONFIG          = require('config').development;
 var DatabaseHelper  = require("./core/db").DatabaseHelper;
 var WorkerManager   = require("./core/worker_manager").WorkerManager;
 var fs              = require('fs');
-process.setMaxListeners(0);
 
-/*var str = fs.createWriteStream(__dirname + '/log/shit.log', {
-  encoding: 'utf8'
-});
-process.stdout.pipe(str);*/
+var NumOfServers    = 1;
 
-if (cluster.isMaster) {
-  var manager = new WorkerManager(CONFIG);
+if ( cluster.isMaster ) {
+  for ( var i=0; i<NumOfServers; ++i )
+    cluster.fork();
 } else {
   var dbHelper = new DatabaseHelper(CONFIG.db);
-  service.sync(dbHelper, CONFIG);
   app.startHttpServer(CONFIG, dbHelper);
 }

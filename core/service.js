@@ -47,6 +47,7 @@ function feedFetchHaveFinished(feedParser) {
             message.addData('action','refresh');
             message.collapseKey = 'refresh';
             sender.send(message, registrationIds, 4, function (result) {
+              logger.info("Pushed refresh notification to device:", registrationIds);
               logger.info(result);
             });
           }
@@ -80,7 +81,7 @@ function getFeedsToSync() {
       if (feedModel) {
         logger.info("New feed to parse: "+ feedModel.url);
         feedModel.nextPull = new Date();
-        feedModel.nextPull.addMinutes(Constants.RefreshEvery * 5); //TODO find better solutions for locking
+        feedModel.nextPull.addMinutes(100); //TODO find better solutions for locking
         feedModel.save().complete(function(error, status) {
           var feedParser = new Feed(feedModel, dbHelper); 
           RunningFeeds.push(feedParser);
