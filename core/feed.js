@@ -21,6 +21,11 @@ function Feed(obj, dbHelper) {
   this.articles    = [];
   this.articles_hash = {};
   this.articles_to_check = [];
+
+  if (this.dbObject.lastRefresh == null) {
+    this.dbObject.lastRefresh = Date.yesterday();
+  }
+
   var _this        = this;
 
   logger.info("New feed parser for: ",this.dbObject.url);
@@ -52,49 +57,59 @@ Feed.prototype.processArticles = function() {
   this.articles_urls = [];
   for (var i=0; i < this.articles.length; i++) {
     var article = this.articles[i];
-    this.articles_urls.push(article.link);
-    this.articles_hash[article.link] = article;
+    if (article.pubDate == null || article.pubDate >= this.dbObject.lastRefresh) {
+      logger.info("New article appered since(pubDate/lastRefresh): ", [article.pubDate, this.dbObject.lastRefresh]);
+      this.articles_urls.push(article.link);  
+      this.articles_hash[article.link] = article;
+    } else {
+      logger.info("Skipping article since(pubDate/lastRefresh): ", [article.pubDate, this.dbObject.lastRefresh]);
+    }
   }
   
-  logger.info("Checking for diffrence between db and rss ", this.articles_urls);
-  var query_array = JSON.parse(JSON.stringify(this.articles_urls));
-  query_array.push('-1');
-  this.dbHelper.Item.findAll({ where: { url: query_array, FeedId: this.dbObject.id } }).success(function(items){
-    var items_count = 0;
-    if (items != null) { items_count = items.length };
-    if(items == null || items_count == _this.articles_urls.length) {
-      _this.newItems = false;
-      logger.info("No new articles found");
-      _this.onEnd();
-    } else {
-      _this.articles = [];
-      var articles_urls_in_db = [];
-      
-      for (var i=0; i < items.length; i++) {
-        var item = items[i];
-        articles_urls_in_db.push(item.url);
-      }
-      logger.info("Articles in DB: ", articles_urls_in_db);
-      logger.info("Articles in RSS: ", _this.articles_urls);
-      
-      for (var i=0; i < _this.articles_urls.length; i++) {
-        var article_url = _this.articles_urls[i];
+  if (this.articles_urls.length == 0) {
+    logger.info("There are no new items since", this.dbObject.lastRefresh);
+    this.onEnd();
+  } else {
+    var query_array = JSON.parse(JSON.stringify(this.articles_urls));
+    logger.info("Checking for diffrence between db and rss ", this.articles_urls);
+    this.dbHelper.Item.findAll({ where: { url: query_array, FeedId: this.dbObject.id } }).success(function(items){
+      var items_count = 0;
+      if (items != null) { items_count = items.length };
+      if(items == null || items_count == _this.articles_urls.length) {
+        _this.newItems = false;
+        logger.info("No new articles found");
+        _this.onEnd();
+      } else {
+        _this.articles = [];
+        var articles_urls_in_db = [];
         
-        if (articles_urls_in_db.indexOf(article_url) == -1) {
-          logger.info("New article url to download: ", article_url);
-          _this.articles.push(_this.articles_hash[article_url]);
-        } else {
-          logger.info("We have this article in db: ", article_url);
+        for (var i=0; i < items.length; i++) {
+          var item = items[i];
+          articles_urls_in_db.push(item.url);
         }
-      };
-      
-      _this.newItems = (_this.articles.length > 0);
-      _this.nextArticle();
-    }
-  }).error(function(error) {
-    logger.error("Could not check in db for new feeds", error);
-    _this.onEnd();
-  });
+        logger.info("Articles in DB: ", articles_urls_in_db);
+        logger.info("Articles in RSS: ", _this.articles_urls);
+        
+        for (var i=0; i < _this.articles_urls.length; i++) {
+          var article_url = _this.articles_urls[i];
+          
+          if (articles_urls_in_db.indexOf(article_url) == -1) {
+            logger.info("New article url to download: ", article_url);
+            _this.articles.push(_this.articles_hash[article_url]);
+          } else {
+            logger.info("We have this article in db: ", article_url);
+          }
+        };
+        
+        _this.newItems = (_this.articles.length > 0);
+        _this.nextArticle();
+      }
+    }).error(function(error) {
+      logger.error("Could not check in db for new feeds", error);
+      _this.onEnd();
+    });
+  }
+  
 }
 
 Feed.prototype.nextSynchronizedArticle = function() {
