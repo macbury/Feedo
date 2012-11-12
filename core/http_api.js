@@ -1,12 +1,22 @@
 var express = require('express')
   , routes  = require('../routes')
   , opml    = require('../routes/opml')
-  , http    = require('http')
+  , https    = require('https')
   , path    = require('path');
 var logger  = require('./logger').logger(module);
 var gzippo  = require('gzippo');
 var jsonxml = require('jsontoxml');
 var app     = express();
+var crypto  = require('crypto');
+var fs      = require("fs");
+
+var privateKey =  fs.readFileSync('./cert/privateKey.pem').toString();
+var certificate = fs.readFileSync('./cert/certificate.pem').toString();  
+
+var options = {
+  key: privateKey, 
+  cert: certificate
+};
 
 app.configure(function(){
   app.set('port', process.env.PORT || 3000);
@@ -63,6 +73,13 @@ app.use(function(err, req, res, next){
   res.send(err.status || 500, jsonxml({ error: err.message }));
 });
 
+app.use(function(req, res, next) {
+  if(!req.secure) {
+    return res.redirect('https://' + req.get('Host') + req.url);
+  }
+  next();
+});
+
 app.use(app.router);
 
 var users = require("../routes/user");
@@ -84,7 +101,7 @@ exports.startHttpServer = function(config, dbHelper) {
     app.set('dbHelper', dbHelper);
   });
 
-  http.createServer(app).listen(app.get('port'), function(){
+  https.createServer(options, app).listen(app.get('port'), function(){
     logger.info("Express server listening on port " + app.get('port'));
   });
 }
