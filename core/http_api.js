@@ -22,9 +22,11 @@ app.configure(function(){
   app.set('port', process.env.PORT || 3000);
   app.use(express.favicon());
   app.use(express.logger('dev'));
+  app.use(express.static(__dirname + '/../public'));
   app.use(express.bodyParser());
   app.use(express.methodOverride());
   app.use(gzippo.compress());
+  
 });
 
 app.configure('development', function(){
