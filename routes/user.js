@@ -53,7 +53,7 @@ exports.gcm = function(req, res) {
   var registration_token = req.param('registration_token');
   res.locals.token.gcm_key = registration_token;
   res.locals.token.save().complete(function(error, token){
-    res.send(200, jsonxml({ session_token: token.hash, registration_token: registration_token }));
+    res.send(201, jsonxml({ session_token: token.hash, registration_token: registration_token }));
   });
 }
 
@@ -87,7 +87,7 @@ exports.auth = function(req, res){
             UserId: user.id,
             hash:   hash
           }).complete(function(error,token) {
-            res.send(200, jsonxml({ token: token.hash, email: user.email }));
+            res.send(201, jsonxml({ token: token.hash, email: user.email }));
           });
         }
         

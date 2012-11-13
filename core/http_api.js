@@ -42,7 +42,7 @@ function error(status, msg) {
 var apiKeyRequired = function(req, res, next){
   var key = req.param('api-key');
   logger.info("Validating api key:", key);
-  if (!key) return res.send(400, jsonxml({ error: 'api key is empty' }));
+  if (!key) return res.send(418, jsonxml({ error: 'api key is empty' }));
   var db   = req.app.get('dbHelper');
 
   db.ApiKey.find({ where: { key: key } }).success(function(apiKey) {

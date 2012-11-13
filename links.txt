@@ -1,1 +1,36 @@
 http://devsec.org/info/ssl-cert.html
+http://kvz.io/blog/2009/12/15/run-nodejs-as-a-service-on-ubuntu-karmic/
+
+418 api key is invalid
+400 token is invalid
+
+Login flow:
+POST /api/auth
+api-token: abcd
+google_auth_token: token from google for reader
+
+201 then success with token: token.hash, email: user.email
+401 invalid google_auth_token
+
+Import feeds:
+POST /api/my/import
+api-token: abcd
+token: user login token from login flow
+google_auth_token: token from google for reader
+
+200 is succes
+401 invalid google_auth_token
+
+Register your device for notifications:
+POST /api/my/gcm
+api-token: abcd
+token: user login token from login flow
+registration_token: from google
+
+201 then success
+
+Retrive stream from server:
+GET /api/my/stream
+api-token: abcd
+token: user login token from login flow
+page: retrived from xml, standard is 7 days ago
