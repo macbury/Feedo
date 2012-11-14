@@ -19,7 +19,7 @@ var options = {
 };
 
 app.configure(function(){
-  app.set('port', process.env.PORT || 3100);
+  app.set('port', process.env.PORT || 3000);
   app.use(express.favicon());
   app.use(express.logger('dev'));
   app.use(express.static(__dirname + '/../public'));
