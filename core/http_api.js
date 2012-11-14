@@ -1,7 +1,7 @@
 var express = require('express')
   , routes  = require('../routes')
   , opml    = require('../routes/opml')
-  , https    = require('https')
+  , http    = require('http')
   , path    = require('path');
 var logger  = require('./logger').logger(module);
 var gzippo  = require('gzippo');
@@ -74,13 +74,13 @@ var userRequired = function(req, res, next){
 app.use(function(err, req, res, next){
   res.send(err.status || 500, jsonxml({ error: err.message }));
 });
-
+/*
 app.use(function(req, res, next) {
-  if(!req.secure) {
-    return res.redirect('https://' + req.get('Host') + req.url);
-  }
+  //if(!req.secure) {
+  //  return res.redirect('https://' + req.get('Host') + req.url);
+  //}
   next();
-});
+});*/
 
 app.use(app.router);
 
@@ -103,7 +103,7 @@ exports.startHttpServer = function(config, dbHelper) {
     app.set('dbHelper', dbHelper);
   });
 
-  https.createServer(options, app).listen(app.get('port'), function(){
+  http.createServer(app).listen(app.get('port'), function(){
     logger.info("Express server listening on port " + app.get('port'));
   });
 }
