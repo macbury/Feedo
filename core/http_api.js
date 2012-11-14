@@ -74,13 +74,13 @@ var userRequired = function(req, res, next){
 app.use(function(err, req, res, next){
   res.send(err.status || 500, jsonxml({ error: err.message }));
 });
-
+/*
 app.use(function(req, res, next) {
-  if(!req.secure) {
-    return res.redirect('https://' + req.get('Host') + req.url);
-  }
+  //if(!req.secure) {
+  //  return res.redirect('https://' + req.get('Host') + req.url);
+  //}
   next();
-});
+});*/
 
 app.use(app.router);
 

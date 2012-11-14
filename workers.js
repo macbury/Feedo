@@ -13,5 +13,4 @@ if (cluster.isMaster) {
 } else {
   var dbHelper = new DatabaseHelper(CONFIG.db);
   service.sync(dbHelper, CONFIG);
-  app.startHttpServer(CONFIG, dbHelper);
 }

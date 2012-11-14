@@ -11,6 +11,13 @@ var NumOfServers    = 1;
 if ( cluster.isMaster ) {
   for ( var i=0; i<NumOfServers; ++i )
     cluster.fork();
+
+  cluster.on('exit', function(worker, code, signal) {
+    logger.error('server ' + worker.process.pid + ' died');
+
+    var worker = cluster.fork();
+    logger.info('Staring new server ' + worker.process.pid);
+  });
 } else {
   var dbHelper = new DatabaseHelper(CONFIG.db);
   app.startHttpServer(CONFIG, dbHelper);
