@@ -1,7 +1,7 @@
 var express = require('express')
   , routes  = require('../routes')
   , opml    = require('../routes/opml')
-  , https    = require('https')
+  , http    = require('http')
   , path    = require('path');
 var logger  = require('./logger').logger(module);
 var gzippo  = require('gzippo');
@@ -19,7 +19,7 @@ var options = {
 };
 
 app.configure(function(){
-  app.set('port', process.env.PORT || 3000);
+  app.set('port', process.env.PORT || 3100);
   app.use(express.favicon());
   app.use(express.logger('dev'));
   app.use(express.static(__dirname + '/../public'));
@@ -103,7 +103,11 @@ exports.startHttpServer = function(config, dbHelper) {
     app.set('dbHelper', dbHelper);
   });
 
-  https.createServer(options, app).listen(app.get('port'), function(){
+  http.createServer(app).listen(app.get('port'), function(){
     logger.info("Express server listening on port " + app.get('port'));
   });
+  
+    //https.createServer(options, app).listen(app.get('port'), function(){
+  //  logger.info("Express server listening on port " + app.get('port'));
+  //});
 }
