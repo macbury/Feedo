@@ -130,8 +130,36 @@ Item.prototype.asyncDownloadNextImage = function() {
     this.onFinish();
   } else {
     logger.info("Downloading image: ", image);
-    var fileName = path.join(__dirname, '../data', image.hash+image.ext);
+    var d1 = image.hash[0]+image.hash[1];
+    var d2 = image.hash[2]+image.hash[3];
 
+    var dir = path.join(__dirname, '../data');
+
+    try {
+      fs.mkdirSync(dir);
+    } catch(e) {
+
+    }
+    logger.info("Creating directory: ", dir);
+
+    dir = path.join(dir, d1);
+    try {
+      fs.mkdirSync(dir);
+    } catch (e) {
+
+    }
+    logger.info("Creating directory: ", dir);
+
+    try {
+      dir = path.join(dir, d2);
+      fs.mkdirSync(dir);
+    } catch (e) {
+
+    }
+    logger.info("Creating directory: ", dir);
+    
+    var fileName = path.join(dir, image.hash+image.ext);
+    logger.info("Analyzing image: "+ image.url, fileName);
     request({url: image.url, encoding: 'binary', timeout: Constants.ImageDownloadTimeout * 1000 }, function(error, response, content) {
       if (response != null && response.statusCode == 200 && content != null && response.headers != null) {
         var contentType = response.headers["content-type"];
