@@ -87,7 +87,8 @@ app.use(app.router);
 var users = require("../routes/user");
 
 app.post('/api/auth', apiKeyRequired, users.auth);
-app.post('/api/my/gcm', [apiKeyRequired, userRequired], users.gcm);
+app.post('/api/my/gcm/register', [apiKeyRequired, userRequired], users.register_gcm);
+app.post('/api/my/gcm/unregister', [apiKeyRequired, userRequired], users.unregister_gcm);
 app.post('/api/my/import', [apiKeyRequired, userRequired], users.import);
 app.get('/api/my/stream', [apiKeyRequired, userRequired], routes.index);
 

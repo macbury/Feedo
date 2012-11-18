@@ -42,18 +42,26 @@ exports.import = function(req, res) {
       }
       
       var gi = new GoogleImporter(dbHelper, res.locals.user, feed_urls);
-      gi.onFinish = function() { res.send(200, { status: "ok" }); };
+      gi.onFinish = function() { res.send(200, jsonxml({ status: "ok" })); };
       gi.run();
     }
   });
 }
 
 
-exports.gcm = function(req, res) {
+exports.register_gcm = function(req, res) {
   var registration_token = req.param('registration_token');
   res.locals.token.gcm_key = registration_token;
   res.locals.token.save().complete(function(error, token){
-    res.send(201, { session_token: token.hash, registration_token: registration_token });
+    res.send(201, jsonxml({ gcm: {session_token: token.hash, registration_token: registration_token} }));
+  });
+}
+
+exports.unregister_gcm = function(req, res) {
+  var registration_token = req.param('registration_token');
+  res.locals.token.gcm_key = null;
+  res.locals.token.save().complete(function(error, token){
+    res.send(201, jsonxml({ status: "OK" }));
   });
 }
 
@@ -87,7 +95,7 @@ exports.auth = function(req, res){
             UserId: user.id,
             hash:   hash
           }).complete(function(error,token) {
-            res.send(201, { token: token.hash, email: user.email });
+            res.send(201, jsonxml({ session: { token: token.hash, email: user.email } }));
           });
         }
         
