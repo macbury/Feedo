@@ -34,3 +34,7 @@ GET /api/my/stream
 api-token: abcd
 token: user login token from login flow
 page: retrived from xml, standard is 7 days ago
+
+store images in diffrent directory
+move base encoding to streaming
+image resising and compressing
