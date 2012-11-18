@@ -12,7 +12,7 @@ function FeedSyncResponseBuilder(req, res) {
   this.req          = req;
 
   var miliseconds   = parseInt(req.param('page'));
-  if (isNaN(miliseconds)) {
+  if (isNaN(miliseconds) || miliseconds <= 0) {
     this.lastDate     = Date.yesterday();
   } else {
     this.lastDate     = new Date(miliseconds);  
@@ -31,22 +31,23 @@ function FeedSyncResponseBuilder(req, res) {
 FeedSyncResponseBuilder.prototype.prepareResponse = function() {
   this.xmlStream = streamify(this.xml).stream;
   this.xmlStream.pipe(this.res);
-  this.res.write('<?xml version="1.0" encoding="UTF-8"?>\n');
+  this.res.write('<?xml version="1.0" encoding="UTF-8"?>');
 }
 
 FeedSyncResponseBuilder.prototype.buildChannelsXML = function() {
   var _this = this;
   logger.info("Building channel: ", this.lastDate.getTime());
-  var SQL = "SELECT * FROM Feeds INNER JOIN FeedsUsers ON FeedsUsers.FeedId = Feeds.id WHERE Feeds.ready=1 AND FeedsUsers.UserId="+this.currentUser.id+" GROUP BY Feeds.id;";
+  var SQL = "SELECT * FROM Feeds INNER JOIN FeedsUsers ON FeedsUsers.FeedId = Feeds.id WHERE Feeds.ready=1 AND Feeds.errorCount = 0 AND FeedsUsers.UserId="+this.currentUser.id+" GROUP BY Feeds.id;";
   logger.info("Executing: ", SQL);
   this.db.db.query(SQL, this.db.Feed).complete(function(error, channels) {
-    logger.info("Fetched feeds count: ", channels.length);
+    if (channels == null) {
+      channels = [];
+    }
     if (error) {
       logger.error("Could not find feeds for current user", error);
-    } else {
-      _this.channels = channels;
     }
-
+    
+    _this.channels = channels;
     var date = Date.yesterday().getTime();
     for (var i = channels.length - 1; i >= 0; i--) {
       date = Math.max(date,channels[i].lastRefresh);
@@ -59,6 +60,7 @@ FeedSyncResponseBuilder.prototype.buildChannelsXML = function() {
 
 FeedSyncResponseBuilder.prototype.addNextChannel = function() {
   var channel = this.channels.shift();
+
   if (channel) {
     this.channels_ids.push(channel.id);
     var channel_tag = this.channels_tag.tag("channel");
@@ -124,7 +126,9 @@ FeedSyncResponseBuilder.prototype.addNextImage = function() {
   var image = this.images.pop();
   var _this = this;
   if (image) {
-    var filename = path.join(__dirname, '../data/'+image.name);
+    var d1 = image.name[0]+image.name[1];
+    var d2 = image.name[2]+image.name[3];
+    var filename = path.join(__dirname, '../data/', d1, d2,image.name);
     logger.info("Loading file: "+ filename);
 
     fs.readFile( filename, function (err, data) {
@@ -132,13 +136,15 @@ FeedSyncResponseBuilder.prototype.addNextImage = function() {
         logger.error("Could not load file", err); 
       }
 
+      var buffer = new Buffer(data, 'binary');
+
       var image_tag = _this.images_tag.tag("image", { uid: image.ItemId.toString() });
         image_tag.tag("name").text(image.name).up();
         image_tag.tag("width").raw(image.width.toString()).up();
         image_tag.tag("height").raw(image.height.toString()).up();
         image_tag.tag("url").raw('<![CDATA['+image.url+']]>').up();
         image_tag.tag("description").text(image.description).up();
-        image_tag.tag("data", { as: "base64", mimeType: image.mimeType.toString() }).raw('<![CDATA['+data+']]>').up();
+        image_tag.tag("data", { as: "base64", mimeType: image.mimeType.toString() }).raw('<![CDATA['+buffer.toString('base64')+']]>').up();
       image_tag.up();
 
       process.nextTick(function() {

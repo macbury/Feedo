@@ -22,8 +22,11 @@ GoogleImporter.prototype.onFinish = function() {}
 GoogleImporter.prototype.subscribe = function(feed) {
   var _this = this;
   logger.info("Subscribing feed: ", feed.url);
-  this.user.hasSubscriptions(feed).success(function(found) {
-    if (!found) {
+  this.dbHelper.db.query("SELECT count(*) FROM FeedsUsers WHERE FeedsUsers.UserId = "+this.user.id+" AND FeedsUsers.FeedId = "+feed.id+";").success(function(count) {
+    var count = parseInt(count[0]['count(*)']);
+    logger.debug("Count for item test", count);
+    
+    if (count == 0) {
       logger.info("Feed subscribed: ", feed.url);
       _this.modelsToSubscribe.push(feed);
       process.nextTick(function() {
@@ -35,8 +38,6 @@ GoogleImporter.prototype.subscribe = function(feed) {
         _this.next();
       });
     }
-
-    
   }).on("error", function(error){
     logger.info("Could not subscribe object");
     //logger.error(error);
@@ -79,7 +80,7 @@ GoogleImporter.prototype.next = function() {
         logger.info("Creating new feed: ", url);
         var nextPull = new Date();
         nextPull.addMinutes(1);
-        _this.dbHelper.Feed.create({ url: url, nextPull: nextPull }).success(function(newFeed) {
+        _this.dbHelper.Feed.create({ url: url, nextPull: nextPull, ready: false }).success(function(newFeed) {
           logger.info("Feed created! New id is: ", newFeed.id);
           _this.subscribe(newFeed);  
         }).on("error", function(error){

@@ -178,7 +178,7 @@ Item.prototype.asyncDownloadNextImage = function() {
         img.src = buffer;
 
         logger.info("Saving file in: "+ fileName);
-        fs.writeFile(fileName, buffer.toString('base64'), function(err) {
+        fs.writeFile(fileName, buffer, function(err) {
           if (err) {
             logger.error("Could not download: ", { error: err, image: image });
           } else {

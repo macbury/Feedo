@@ -59,9 +59,16 @@ exports.register_gcm = function(req, res) {
 
 exports.unregister_gcm = function(req, res) {
   var registration_token = req.param('registration_token');
-  res.locals.token.gcm_key = null;
-  res.locals.token.save().complete(function(error, token){
-    res.send(201, jsonxml({ status: "OK" }));
+  var dbHelper           = req.app.get('dbHelper');
+  dbHelper.Token.find({ where: { gcm_key: registration_token } }).complete(function(error, token) {
+    if (error) {
+      res.send(201, jsonxml({ status: "Invalid token" }));
+    } else if(token != null) {
+      token.gcm_key = null;
+      token.save().complete(function() {
+        res.send(201, jsonxml({ status: "OK" }));  
+      })
+    }
   });
 }
 
