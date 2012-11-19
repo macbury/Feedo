@@ -79,9 +79,11 @@ DatabaseHelper.prototype.buildFeed = function() {
   this.Feed = this.db.define('Feed', {
     url: { type: Sequelize.STRING, allowNull: false, unique: true  },
     title: { type: Sequelize.STRING },
+    siteUrl: { type: Sequelize.STRING },
     nextPull: { type: Sequelize.DATE, defaultValue: Sequelize.NOW },
     errorCount: { type: Sequelize.INTEGER, defaultValue: 0 },
     errorMessage: { type: Sequelize.TEXT },
+    description: { type: Sequelize.TEXT },
     lastRefresh: { type: Sequelize.DATE, defaultValue: Sequelize.NOW },
     feedType: { type: Sequelize.STRING },
     ready: { type: Sequelize.BOOLEAN, defaultValue: false },

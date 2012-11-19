@@ -7,12 +7,13 @@ var RedisConstants = Constants.RedisConstants;
 var Sequelize      = require('sequelize');
 var charset        = require('charset');
 var Iconv          = require('iconv').Iconv;
-
+var gcm            = require('node-gcm');
 require('date-utils');
 
-function Feed(obj, dbHelper) {
+function Feed(obj, dbHelper, sender) {
   this.dbObject    = obj;
   this.broken      = false;
+  this.sender      = sender;
   this.fetchCount  = 0;
   this.parser      = new FeedParser();
   this.dbHelper    = dbHelper;
@@ -59,7 +60,9 @@ Feed.prototype.processArticles = function() {
 
   for (var i=0; i < this.articles.length; i++) {
     var article = this.articles[i];
-    this.dbObject.title = article.meta.title;
+    this.dbObject.title       = article.meta.title;
+    this.dbObject.description = article.meta.description;
+    this.dbObject.siteUrl     = article.meta.link;
     if (article.pubDate == null || article.pubDate >= this.dbObject.lastRefresh) {
       if (article.link) {
         this.articles_urls.push(article.link);  
@@ -272,10 +275,50 @@ Feed.prototype.onEnd = function() {
 
   this.dbObject.nextPull = new Date();
   this.dbObject.nextPull.addMinutes(Constants.RefreshEvery * (this.dbObject.emptyFetchCount+1));
-  logger.info("Finished, removing lock from feed, next check will be on: "+ JSON.stringify(this.dbObject.nextPull) + " for feed" +this.dbObject.id);
   this.dbObject.save().complete(function(error, status){
-    _this.endCallback(_this);
+    logger.info("Finished, removing lock from feed, next check will be on: "+ JSON.stringify(_this.dbObject.nextPull) + " for feed " + _this.dbObject.url);
+    _this.sendNotifications();
   }); 
+}
+
+Feed.prototype.sendNotifications = function() {
+  var _this = this;
+  if (this.newItems) {
+    logger.info("New items for feed, sending notification to user devices");
+
+    this.dbHelper.db.query("SELECT DISTINCT(Tokens.gcm_key) FROM Tokens INNER JOIN FeedsUsers ON FeedsUsers.UserId = Tokens.UserId WHERE FeedsUsers.FeedId = "+this.dbObject.id+" AND Tokens.gcm_key IS NOT NULL;").complete(function(error, gcm_keys){ 
+      if (error) {
+        logger.error("Could not fetch tokens for users", error);
+          _this.endCallback(_this);
+      } else {
+        var registrationIds = []; 
+        for (var i = gcm_keys.length - 1; i >= 0; i--) {
+          var key = gcm_keys[i];
+          registrationIds.push(key.gcm_key);
+        }
+
+        if (registrationIds.length > 0) {
+          logger.info("Devices to push notifications:", registrationIds);
+          var message = new gcm.Message();
+          message.addData('action','refresh');
+          message.addData('page',_this.dbObject.lastRefresh.getTime());
+          message.collapseKey = 'refresh';
+          _this.sender.send(message, registrationIds, 4, function (result) {
+            logger.info("Pushed refresh notification to device:", registrationIds);
+            logger.info(result);
+            _this.endCallback(_this);
+          });
+        } else {
+          logger.info("No devices to push");
+          _this.endCallback(_this);
+        }
+      }
+    });
+
+  } else {
+    logger.info("No changes, leave poor device alone");
+    _this.endCallback(_this);
+  }
 }
 
 exports.Feed = Feed;
