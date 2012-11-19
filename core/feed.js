@@ -283,38 +283,35 @@ Feed.prototype.sendNotifications = function() {
   var _this = this;
   if (this.newItems) {
     logger.info("New items for feed, sending notification to user devices");
-    this.dbObject.getUsers().success(function(users) {
-      var uids = [];
-      for (var i = users.length - 1; i >= 0; i--) {
-        uids.push(users[i].id);
-      }
-      if (uids.length > 0) {
-        logger.info("Users to push notifications:", uids);
-        this.dbHelper.Token.findAll({ where: ["UserId IN (?) AND gcm_key IS NOT NULL", uids] }).success(function(tokens){
-          var message = new gcm.Message();
-          var registrationIds = [];
-          for (var i = tokens.length - 1; i >= 0; i--) {
-            registrationIds.push(tokens[i].gcm_key);
-          }
-          if (registrationIds.length > 0) {
-            logger.info("Devices to push notifications:", registrationIds);
-            message.addData('action','refresh');
-            message.collapseKey = 'refresh';
-            _this.sender.send(message, registrationIds, 4, function (result) {
-              logger.info("Pushed refresh notification to device:", registrationIds);
-              logger.info(result);
-              _this.endCallback(_this);
-            });
-          }
-        }).on('error', function(error) {
-          logger.error("Could not fetch tokens for users");
+
+    this.dbHelper.db.query("SELECT DISTINCT(Tokens.gcm_key) FROM Tokens INNER JOIN FeedsUsers ON FeedsUsers.UserId = Tokens.UserId WHERE FeedsUsers.FeedId = "+this.dbObject.id+" AND Tokens.gcm_key IS NOT NULL;").complete(function(error, gcm_keys){ 
+      if (error) {
+        logger.error("Could not fetch tokens for users", error);
           _this.endCallback(_this);
-        });
+      } else {
+        var registrationIds = []; 
+        for (var i = gcm_keys.length - 1; i >= 0; i--) {
+          var key = gcm_keys[i];
+          registrationIds.push(key.gcm_key);
+        }
+
+        if (registrationIds.length > 0) {
+          logger.info("Devices to push notifications:", registrationIds);
+          message.addData('action','refresh');
+          message.addData('page',_this.dbObject.lastRefresh.getTime());
+          message.collapseKey = 'refresh';
+          _this.sender.send(message, registrationIds, 4, function (result) {
+            logger.info("Pushed refresh notification to device:", registrationIds);
+            logger.info(result);
+            _this.endCallback(_this);
+          });
+        } else {
+          logger.info("No devices to push");
+          _this.endCallback(_this);
+        }
       }
-    }).on('error', function(error) {
-      logger.error("Could not fetch users for notifications");
-      _this.endCallback(_this);
     });
+
   } else {
     logger.info("No changes, leave poor device alone");
     _this.endCallback(_this);
