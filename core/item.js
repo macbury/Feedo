@@ -209,7 +209,7 @@ function mapImages(baseURL, images) {
       var hash    = crypto.createHash('sha1').update(fullURL).digest("hex");
       var extName = path.extname(fullURL).split("?")[0];
       images_url.push({ url: fullURL, hash: hash, description: image.alt, ext: extName });
-      image.src = hash + extName;
+      image.src = [hash[0], hash[1]].join("") + "/" + [hash[2], hash[3]].join("") + "/" + hash + extName;
     }
     
   }
