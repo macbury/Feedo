@@ -26,36 +26,6 @@ function feedFetchHaveFinished(feedParser) {
   }
 
   logger.info("Removing feed from quee, total parsers: " + RunningFeeds.length);
-
-  if (feedParser.newItems) {
-    logger.info("New items for feed, sending notification to user devices");
-    feedParser.dbObject.getUsers().success(function(users) {
-      var uids = [];
-      for (var i = users.length - 1; i >= 0; i--) {
-        uids.push(users[i].id);
-      }
-      if (uids.length > 0) {
-        logger.info("Users to push notifications:", uids);
-        dbHelper.Token.findAll({ where: ["UserId IN (?) AND gcm_key IS NOT NULL", uids] }).success(function(tokens){
-          var message = new gcm.Message();
-          var registrationIds = [];
-          for (var i = tokens.length - 1; i >= 0; i--) {
-            registrationIds.push(tokens[i].gcm_key);
-          }
-          if (registrationIds.length > 0) {
-            logger.info("Devices to push notifications:", registrationIds);
-            message.addData('action','refresh');
-            message.collapseKey = 'refresh';
-            sender.send(message, registrationIds, 4, function (result) {
-              logger.info("Pushed refresh notification to device:", registrationIds);
-              logger.info(result);
-            });
-          }
-        });
-      }
-    });
-    
-  }
 }
 
 function nextPopQueue() {
@@ -83,7 +53,7 @@ function getFeedsToSync() {
         feedModel.nextPull = new Date();
         feedModel.nextPull.addMinutes(100); //TODO find better solutions for locking
         feedModel.save().complete(function(error, status) {
-          var feedParser = new Feed(feedModel, dbHelper); 
+          var feedParser = new Feed(feedModel, dbHelper, sender); 
           RunningFeeds.push(feedParser);
           feedParser.start(feedFetchHaveFinished);
           nextPopQueue();  

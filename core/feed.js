@@ -7,12 +7,13 @@ var RedisConstants = Constants.RedisConstants;
 var Sequelize      = require('sequelize');
 var charset        = require('charset');
 var Iconv          = require('iconv').Iconv;
-
+var gcm            = require('node-gcm');
 require('date-utils');
 
-function Feed(obj, dbHelper) {
+function Feed(obj, dbHelper, sender) {
   this.dbObject    = obj;
   this.broken      = false;
+  this.sender      = sender;
   this.fetchCount  = 0;
   this.parser      = new FeedParser();
   this.dbHelper    = dbHelper;
@@ -272,10 +273,52 @@ Feed.prototype.onEnd = function() {
 
   this.dbObject.nextPull = new Date();
   this.dbObject.nextPull.addMinutes(Constants.RefreshEvery * (this.dbObject.emptyFetchCount+1));
-  logger.info("Finished, removing lock from feed, next check will be on: "+ JSON.stringify(this.dbObject.nextPull) + " for feed" +this.dbObject.id);
   this.dbObject.save().complete(function(error, status){
-    _this.endCallback(_this);
+    logger.info("Finished, removing lock from feed, next check will be on: "+ JSON.stringify(_this.dbObject.nextPull) + " for feed " + _this.dbObject.url);
+    _this.sendNotifications();
   }); 
+}
+
+Feed.prototype.sendNotifications = function() {
+  var _this = this;
+  if (this.newItems) {
+    logger.info("New items for feed, sending notification to user devices");
+    this.dbObject.getUsers().success(function(users) {
+      var uids = [];
+      for (var i = users.length - 1; i >= 0; i--) {
+        uids.push(users[i].id);
+      }
+      if (uids.length > 0) {
+        logger.info("Users to push notifications:", uids);
+        this.dbHelper.Token.findAll({ where: ["UserId IN (?) AND gcm_key IS NOT NULL", uids] }).success(function(tokens){
+          var message = new gcm.Message();
+          var registrationIds = [];
+          for (var i = tokens.length - 1; i >= 0; i--) {
+            registrationIds.push(tokens[i].gcm_key);
+          }
+          if (registrationIds.length > 0) {
+            logger.info("Devices to push notifications:", registrationIds);
+            message.addData('action','refresh');
+            message.collapseKey = 'refresh';
+            _this.sender.send(message, registrationIds, 4, function (result) {
+              logger.info("Pushed refresh notification to device:", registrationIds);
+              logger.info(result);
+              _this.endCallback(_this);
+            });
+          }
+        }).on('error', function(error) {
+          logger.error("Could not fetch tokens for users");
+          _this.endCallback(_this);
+        });
+      }
+    }).on('error', function(error) {
+      logger.error("Could not fetch users for notifications");
+      _this.endCallback(_this);
+    });
+  } else {
+    logger.info("No changes, leave poor device alone");
+    _this.endCallback(_this);
+  }
 }
 
 exports.Feed = Feed;
