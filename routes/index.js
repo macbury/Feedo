@@ -66,6 +66,9 @@ FeedSyncResponseBuilder.prototype.addNextChannel = function() {
     var channel_tag = this.channels_tag.tag("channel");
       channel_tag.tag("uid").text(channel.id.toString()).up();
       channel_tag.tag("title").text(channel.title.toString(), { escape: true }).up();
+      if (channel.description) {
+        channel_tag.tag("description").text(channel.description.toString(), { escape: true }).up();  
+      }
       channel_tag.tag("url").text(channel.url.toString(), { escape: true }).up();
     channel_tag.up();
 

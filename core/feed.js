@@ -60,7 +60,9 @@ Feed.prototype.processArticles = function() {
 
   for (var i=0; i < this.articles.length; i++) {
     var article = this.articles[i];
-    this.dbObject.title = article.meta.title;
+    this.dbObject.title       = article.meta.title;
+    this.dbObject.description = article.meta.description;
+    this.dbObject.siteUrl     = article.meta.link;
     if (article.pubDate == null || article.pubDate >= this.dbObject.lastRefresh) {
       if (article.link) {
         this.articles_urls.push(article.link);  
@@ -297,6 +299,7 @@ Feed.prototype.sendNotifications = function() {
 
         if (registrationIds.length > 0) {
           logger.info("Devices to push notifications:", registrationIds);
+          var message = new gcm.Message();
           message.addData('action','refresh');
           message.addData('page',_this.dbObject.lastRefresh.getTime());
           message.collapseKey = 'refresh';
