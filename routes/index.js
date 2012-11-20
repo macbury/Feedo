@@ -89,9 +89,16 @@ FeedSyncResponseBuilder.prototype.addNextChannel = function() {
 
 FeedSyncResponseBuilder.prototype.buildItemsXML = function() {
   var _this = this;
-  this.db.Item.findAll({ order: "createdAt DESC", where: ["Items.FeedId IN (?) AND Items.pubDate > ?", this.channels_ids, this.lastDate] }).success(function(items) {
-    logger.info("Fetched items count: ", items.length);
-    _this.items     = items;
+  var SQL =  "SELECT * FROM Items as i LEFT OUTER JOIN `Reads` as ir ON (i.id = ir.ItemId AND ir.UserId = "+this.currentUser.id+") WHERE i.FeedId IN ("+this.channels_ids.join(,)+") AND ir.id IS NULL;
+";
+  this.db.db.query(SQL, this.db.Item).complete(function(error,items) {
+    if(error) {
+      _this.items     = [];
+      logger.error("Could not fetch items from db:", [SQL, error]);
+    } else {
+      logger.info("Fetched items count: ", items.length);
+      _this.items     = items;
+    }
     _this.items_tag = _this.root.tag("items", { count: items.length.toString() });
     _this.addNextItem();
   });
