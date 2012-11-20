@@ -34,11 +34,22 @@ FeedSyncResponseBuilder.prototype.prepareResponse = function() {
   this.res.write('<?xml version="1.0" encoding="UTF-8"?>');
 }
 
+FeedSyncResponseBuilder.prototype.toSqlDate = function(date) {
+  return [
+    [
+      date.getFullYear(),
+      ((date.getMonth() < 9 ? '0' : '') + (date.getMonth()+1)),
+      ((date.getDate() < 10 ? '0' : '') + date.getDate())
+    ].join("-"),
+    date.toLocaleTimeString()
+  ].join(" ");
+}
+
+
 FeedSyncResponseBuilder.prototype.buildChannelsXML = function() {
   var _this = this;
   logger.info("Building channel: ", this.lastDate.getTime());
-  var SQL = "SELECT * FROM Feeds INNER JOIN FeedsUsers ON FeedsUsers.FeedId = Feeds.id WHERE Feeds.ready=1 AND Feeds.errorCount = 0 AND FeedsUsers.UserId="+this.currentUser.id+" GROUP BY Feeds.id;";
-  logger.info("Executing: ", SQL);
+  var SQL = "SELECT * FROM Feeds INNER JOIN FeedsUsers ON FeedsUsers.FeedId = Feeds.id WHERE Feeds.ready=1 AND Feeds.errorCount = 0 AND FeedsUsers.UserId="+this.currentUser.id+" AND Feeds.lastRefresh > '"+this.toSqlDate(this.lastDate)+"' GROUP BY Feeds.id;";
   this.db.db.query(SQL, this.db.Feed).complete(function(error, channels) {
     if (channels == null) {
       channels = [];
@@ -50,7 +61,8 @@ FeedSyncResponseBuilder.prototype.buildChannelsXML = function() {
     _this.channels = channels;
     var date = Date.yesterday().getTime();
     for (var i = channels.length - 1; i >= 0; i--) {
-      date = Math.max(date,channels[i].lastRefresh);
+      date = Math.max(date,channels[i].lastRefresh.getTime());
+      logger.info("Last Refresh: ", date);
     };
 
     _this.channels_tag = _this.root.tag("channels", { page: date.toString(), count: channels.length.toString() });
@@ -70,8 +82,13 @@ FeedSyncResponseBuilder.prototype.addNextChannel = function() {
       }
 
       if (channel.siteUrl) {
-        channel_tag.tag("url").text(channel.siteUrl, { escape: true }).up();
+        channel_tag.tag("site-url").text(channel.siteUrl, { escape: true }).up();
       }
+
+      if (channel.lastRefresh) {
+        channel_tag.tag("refresh").text(channel.lastRefresh.getTime().toString(), { escape: true }).up();
+      }
+
       channel_tag.tag("url").text(channel.url.toString(), { escape: true }).up();
     channel_tag.up();
 
@@ -88,8 +105,7 @@ FeedSyncResponseBuilder.prototype.addNextChannel = function() {
 
 FeedSyncResponseBuilder.prototype.buildItemsXML = function() {
   var _this = this;
-  var SQL =  "SELECT i.* FROM Items as i LEFT OUTER JOIN `Reads` as ir ON (i.id = ir.ItemId AND ir.UserId = "+this.currentUser.id+") WHERE i.FeedId IN ("+this.channels_ids.join(,)+") AND ir.id IS NULL;
-";
+  var SQL = "SELECT i.* FROM Items as i LEFT OUTER JOIN `Reads` as ir ON (i.id = ir.ItemId AND ir.UserId = "+this.currentUser.id+") WHERE i.FeedId IN ("+this.channels_ids.join(',')+") AND ir.id IS NULL;";
   this.db.db.query(SQL, this.db.Item).complete(function(error,items) {
     if(error) {
       _this.items     = [];
@@ -142,7 +158,7 @@ FeedSyncResponseBuilder.prototype.addNextImage = function() {
     var d1 = image.name[0]+image.name[1];
     var d2 = image.name[2]+image.name[3];
     var filename = path.join(__dirname, '../data/', d1, d2,image.name);
-    logger.info("Loading file: "+ filename);
+    //logger.info("Loading file: "+ filename);
 
     fs.readFile( filename, function (err, data) {
       if (err) {
