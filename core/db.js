@@ -99,6 +99,11 @@ DatabaseHelper.prototype.buildItem = function() {
     body: { type: Sequelize.TEXT },
     hash: { type: Sequelize.STRING, allowNull: false }
   },{});
+
+  this.Read = this.db.define('Read', {
+    ItemId: { type: Sequelize.INTEGER, allowNull: false  },
+    UserId: { type: Sequelize.INTEGER, allowNull: false  }
+  },{});
 }
 
 DatabaseHelper.prototype.sync = function() {
@@ -108,6 +113,7 @@ DatabaseHelper.prototype.sync = function() {
   chainer.add(this.Token.sync());
   chainer.add(this.Image.sync());
   chainer.add(this.Item.sync());
+  chainer.add(this.Read.sync());
   chainer.add(this.ApiKey.sync());
   return chainer;
 }

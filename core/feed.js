@@ -31,10 +31,12 @@ function Feed(obj, dbHelper, sender) {
 
   logger.info("New feed parser for: ",this.dbObject.url);
   
-  /*this.parser.on('title', function(title) {
-    logger.info('title of feed is', title);
-    _this.dbObject.title = title;
-  });*/
+  this.parser.on('meta', function(meta) {
+    logger.info('meta info found for', _this.dbObject.url);
+    _this.dbObject.title       = meta.title;
+    _this.dbObject.description = meta.description;
+    _this.dbObject.siteUrl     = meta.link;
+  });
 
   this.parser.on("article", function(article) {
     logger.info("Found article in rss xml");
@@ -60,9 +62,6 @@ Feed.prototype.processArticles = function() {
 
   for (var i=0; i < this.articles.length; i++) {
     var article = this.articles[i];
-    this.dbObject.title       = article.meta.title;
-    this.dbObject.description = article.meta.description;
-    this.dbObject.siteUrl     = article.meta.link;
     if (article.pubDate == null || article.pubDate >= this.dbObject.lastRefresh) {
       if (article.link) {
         this.articles_urls.push(article.link);  
