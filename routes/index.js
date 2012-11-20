@@ -89,7 +89,7 @@ FeedSyncResponseBuilder.prototype.addNextChannel = function() {
 
 FeedSyncResponseBuilder.prototype.buildItemsXML = function() {
   var _this = this;
-  var SQL =  "SELECT * FROM Items as i LEFT OUTER JOIN `Reads` as ir ON (i.id = ir.ItemId AND ir.UserId = "+this.currentUser.id+") WHERE i.FeedId IN ("+this.channels_ids.join(,)+") AND ir.id IS NULL;
+  var SQL =  "SELECT i.* FROM Items as i LEFT OUTER JOIN `Reads` as ir ON (i.id = ir.ItemId AND ir.UserId = "+this.currentUser.id+") WHERE i.FeedId IN ("+this.channels_ids.join(,)+") AND ir.id IS NULL;
 ";
   this.db.db.query(SQL, this.db.Item).complete(function(error,items) {
     if(error) {
