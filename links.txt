@@ -41,6 +41,11 @@ api-token: abcd
 token: user login token from login flow
 item_ids: items ids array that was readed
 
+Check for feeds
+GET /api/scan
+api-token: abcd
+url: url for website to check
+
 store images in diffrent directory
 move base encoding to streaming
 image resising and compressing

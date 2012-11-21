@@ -85,6 +85,7 @@ app.use(function(req, res, next) {
 app.use(app.router);
 
 var users = require("../routes/user");
+var feeds = require("../routes/feeds");
 
 app.post('/api/auth', apiKeyRequired, users.auth);
 app.post('/api/my/gcm/register', [apiKeyRequired, userRequired], users.register_gcm);
@@ -92,6 +93,7 @@ app.post('/api/my/gcm/unregister', [apiKeyRequired, userRequired], users.unregis
 app.post('/api/my/import', [apiKeyRequired, userRequired], users.import);
 app.get('/api/my/stream', [apiKeyRequired, userRequired], routes.index);
 app.post('/api/my/reads', [apiKeyRequired, userRequired], routes.reads);
+app.get('/api/scan', apiKeyRequired, feeds.scan);
 
 
 app.use(function(req, res){

@@ -14,6 +14,7 @@ exports.FeedDownloadTimeout     = 25;
 
 exports.FeedCheckIntervalMax    = 10; // Max seconds for next query to database for ask for next feeds to check
 
+exports.FeedScrapingTimeout     = 10; // Time in seconds for download webpage and check if it have any rss channel
 exports.MaxEmptyRefresh         = 144; // MaxEmptyRefresh * RefreshEvery = half day max for feed to next refesh
 exports.RefreshEvery		        = 5; //minutes to next feed refresh
 exports.MaxRunningJobs          = 5; // how many jobs can be on the redis to queue

@@ -5,6 +5,7 @@ var logger    = require('../core/logger').logger(module);
 var path      = require('path');
 var util      = require('util');
 var Sequelize = require("sequelize");
+var jsonxml                     = require('jsontoxml');
 require('date-utils');
 function FeedSyncResponseBuilder(req, res) {
   this.xml          = new asyncxml.Builder({pretty:false});

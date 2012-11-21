@@ -1,9 +1,9 @@
 /*jslint undef: true, nomen: true, eqeqeq: true, plusplus: true, newcap: true, immed: true, browser: true, devel: true, passfail: false */
 /*global window: false, readConvertLinksToFootnotes: false, readStyle: false, readSize: false, readMargin: false, Typekit: false, ActiveXObject: false */
-
+var logger = require('./logger').logger(module);
 var dbg = (typeof console !== 'undefined') ? function(s) {
     if (readability.debugging) {
-        console.log("Readability: " + s);
+        logger.debug("Readability: ", s);
     }
 } : function() {};
 
@@ -24,7 +24,7 @@ var Item        = require('./item');
 var readability = {
     version:                '1.7.1',
     debugging:              true,
-    emailSrc:               'http://lab.arc90.com/experiments/readability/email.php',
+    emailSrc:               '',
     iframeLoads:             0,
     convertLinksToFootnotes: false,
     reversePageScroll:       false, /* If they hold shift and hit space, scroll up */
