@@ -4,6 +4,7 @@ var fs        = require('fs');
 var logger    = require('../core/logger').logger(module);
 var path      = require('path');
 var util      = require('util');
+var Sequelize = require("sequelize");
 require('date-utils');
 function FeedSyncResponseBuilder(req, res) {
   this.xml          = new asyncxml.Builder({pretty:false});
@@ -188,3 +189,35 @@ FeedSyncResponseBuilder.prototype.addNextImage = function() {
 }
 
 exports.index = function(req, res){ new FeedSyncResponseBuilder(req, res); }
+
+exports.reads = function(req, res){
+  var dbHelper     = req.app.get('dbHelper');
+  var currentUser  = res.locals.user;
+  var iids         = [-1];
+
+  var temp_ids     = req.param('item_ids');
+  if (temp_ids) {
+    for (var i = temp_ids.length - 1; i >= 0; i--) {
+      temp_ids[i]
+    };
+  };
+
+  dbHelper.db.query("SELECT Items.id AS id FROM Items WHERE Items.id IN ("+iids.join(',')+")").complete(function(error, output){
+    if(error) {
+      logger.error("Could not get data from db", error);
+      res.send(500, jsonxml({ error: "database error!" }));
+    } else {
+      var chainer = new Sequelize.Utils.QueryChainer();
+      for (var i = output.length - 1; i >= 0; i--) {
+        var item_id = output[i].id;
+        var SQL = "INSERT INTO `Reads` (`ItemId`,`UserId`) VALUES ("+item_id+","+currentUser.user.id+")";
+        chainer.add(dbHelper.db.query(SQL)); 
+      }
+
+      chainer.run().complete(function(error, output) {
+        logger.info("Finished Syncing reads");
+        res.send(201, jsonxml({ status: "success", count: output.length }));
+      });
+    } 
+  });
+}
